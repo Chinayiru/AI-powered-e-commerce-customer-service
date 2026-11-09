@@ -1,0 +1,28 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "create_time": "2026-11-01 09:00:00",
+    "logistics": [
+      {
+        "company": "中通",
+        "package_id": "PKG1",
+        "receive_time": "2026-11-05 15:00:00",
+        "ship_time": "2026-11-02 10:00:00",
+        "tracking_no": "ZT123"
+      }
+    ],
+    "order_id": "DY2001",
+    "order_status": "3",
+    "pay_amount": "120.00",
+    "product_items": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "120.00",
+        "sku_id": "SKU-B",
+        "title": "蓝牙耳机"
+      }
+    ]
+  },
+  "platform": "douyin"
+}

@@ -1,0 +1,40 @@
+{"qa_id": "QA-001", "question": "七天无理由从哪天开始算？", "answer": "自签收次日零时起算七天，最后一天为节假日的顺延至节假日后第一个工作日。", "category": "refund_window", "tags": ["七天", "签收", "起算"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-002", "question": "超过七天还能退款吗？", "answer": "已签收超过七天的订单，仅在商品存在质量问题或与描述不符时支持申请，需提供照片或视频凭证。", "category": "refund_window", "tags": ["超期", "质量问题"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-003", "question": "未发货订单可以退款吗？", "answer": "未发货订单支持仅退款，商家应在 48 小时内处理，超时平台自动退款。", "category": "refund_window", "tags": ["未发货", "仅退款"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-004", "question": "签收时间以什么为准？", "answer": "以物流显示的签收时间为准；多包裹订单以最后一个包裹的签收时间为准。", "category": "refund_window", "tags": ["签收时间", "多包裹"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-005", "question": "定制商品适用七天无理由吗？", "answer": "定制、鲜活易腐、拆封的音像制品等不适用七天无理由退货。", "category": "refund_window", "tags": ["定制", "不适用"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-006", "question": "少件需要什么凭证？", "answer": "需提供包裹面单、开箱照片或视频，能看清包裹内件数量与商品外观。", "category": "evidence", "tags": ["少件", "开箱", "凭证"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-007", "question": "商品破损如何举证？", "answer": "提供破损部位特写、外包装六面照片，以及物流面单照片。", "category": "evidence", "tags": ["破损", "举证"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-008", "question": "凭证多久内提交？", "answer": "商家发起举证要求后 48 小时内提交，逾期视为放弃。", "category": "evidence", "tags": ["凭证", "时限"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-009", "question": "虚假凭证的后果？", "answer": "伪造凭证将驳回申请，情节严重的限制售后权限。", "category": "evidence", "tags": ["虚假", "伪造"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-010", "question": "视频凭证要求？", "answer": "视频需连续拍摄开箱过程，不得剪辑，时长不少于 15 秒。", "category": "evidence", "tags": ["视频", "开箱"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-011", "question": "虚拟商品支持退款吗？", "answer": "已激活或已使用的虚拟商品不支持七天无理由退款。", "category": "digital", "tags": ["虚拟", "不支持"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-012", "question": "未激活的会员卡能退吗？", "answer": "未激活的会员卡可在购买后 7 天内申请退款，激活后不支持", "category": "digital", "tags": ["会员卡", "未激活"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-013", "question": "数字商品自动处理吗？", "answer": "数字类目默认不进入自动处理，需人工审核。", "category": "digital", "tags": ["数字类目", "人工"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-014", "question": "充值类订单能退吗？", "answer": "话费、流量等充值类订单一经充值成功不支持退款。", "category": "digital", "tags": ["充值", "话费"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-015", "question": "软件授权码能退吗？", "answer": "授权码一经展示即视为交付，不支持退款。", "category": "digital", "tags": ["授权码", "软件"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-016", "question": "用户威胁投诉怎么处理？", "answer": "涉及 12315、法院起诉、媒体曝光的工单必须转人工，不得自动答复。", "category": "threat", "tags": ["12315", "投诉", "转人工"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-017", "question": "辱骂与威胁客服？", "answer": "对客服进行人身威胁的，保留证据并升级至主管处理。", "category": "threat", "tags": ["辱骂", "威胁"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-018", "question": "平台介入怎么响应？", "answer": "用户申请平台介入后，商家应在 24 小时内响应。", "category": "threat", "tags": ["平台介入", "响应"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-019", "question": "差评威胁怎么处理？", "answer": "以差评要挟额外赔偿的，按异常诉求转人工。", "category": "threat", "tags": ["差评", "异常诉求"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-020", "question": "收到律师函怎么办？", "answer": "收到律师函或诉讼材料的，立即转法务，不得自行承诺。", "category": "threat", "tags": ["律师函", "法务"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-021", "question": "退货退款流程是什么？", "answer": "审核通过后买家需在 7 天内寄回，填写退货单号；商家收货验收后 48 小时内退款。", "category": "return_logistics", "tags": ["退货", "流程"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-022", "question": "退货运费谁承担？", "answer": "质量问题由商家承担运费；非质量问题由买家承担，另有约定除外。", "category": "return_logistics", "tags": ["运费", "责任"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-023", "question": "退货地址错误怎么办？", "answer": "商家需在审核通过时提供准确退货地址，地址错误导致的损失由商家承担。", "category": "return_logistics", "tags": ["退货地址", "错误"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-024", "question": "退货包裹丢失怎么办？", "answer": "买家寄回后物流丢失的，凭物流凭证由平台介入处理。", "category": "return_logistics", "tags": ["退货", "丢失"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-025", "question": "七天无理由退货商品状态要求？", "answer": "商品需保持完好、配件齐全、不影响二次销售。", "category": "return_logistics", "tags": ["完好", "二次销售"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-026", "question": "部分退款怎么算？", "answer": "部分退款金额不得超过该商品实付金额，按商品成交价比例计算。", "category": "partial", "tags": ["部分退款", "比例"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-027", "question": "多件商品退一件怎么算？", "answer": "多件订单支持按件退款，运费按比例分摊。", "category": "partial", "tags": ["多件", "分摊"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-028", "question": "优惠券订单退款怎么处理？", "answer": "使用优惠券的订单退款时，优惠券按规则退回或作废。", "category": "partial", "tags": ["优惠券", "退款"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-029", "question": "部分退款后还能再申请吗？", "answer": "同一订单部分退款后，剩余金额仍可申请，累计不得超过实付。", "category": "partial", "tags": ["累计", "实付"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-030", "question": "少件补发还是退款？", "answer": "少件可协商补发或按缺少数量退款，由买家选择。", "category": "partial", "tags": ["补发", "少件"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-031", "question": "发货前能改地址吗？", "answer": "未发货订单可修改收货地址，需买家提供新地址并确认。", "category": "address_change", "tags": ["改地址", "未发货"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-032", "question": "已发货怎么改地址？", "answer": "已发货订单需联系快递改派，产生的费用由责任方承担。", "category": "address_change", "tags": ["已发货", "改派"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-033", "question": "改地址失败怎么办？", "answer": "改派失败导致退回的，退款需扣除实际运费。", "category": "address_change", "tags": ["改派失败", "退回"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-034", "question": "跨境订单能改地址吗？", "answer": "跨境订单发货后不支持修改地址。", "category": "address_change", "tags": ["跨境", "不支持"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-035", "question": "能改收货人电话吗？", "answer": "可修改联系电话，需核实身份后操作。", "category": "address_change", "tags": ["电话", "核实"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-036", "question": "催发货怎么处理？", "answer": "承诺 48 小时内发货的订单，超时可按平台规则申请赔付。", "category": "shipping_urge", "tags": ["催发货", "赔付"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-037", "question": "预售商品什么时候发货？", "answer": "预售商品以详情页承诺的发货时间为准。", "category": "shipping_urge", "tags": ["预售", "发货"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-038", "question": "物流停滞怎么办？", "answer": "物流超过 72 小时无更新，可发起物流查询工单。", "category": "shipping_urge", "tags": ["物流停滞", "查询"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-039", "question": "虚假发货怎么判定？", "answer": "上传虚假单号的，平台可判定虚假发货并赔付。", "category": "shipping_urge", "tags": ["虚假发货", "单号"], "source": "policy_manual_v1", "status": "approved"}
+{"qa_id": "QA-040", "question": "缺货怎么处理？", "answer": "缺货无法发货的，应主动告知买家并支持全额退款。", "category": "shipping_urge", "tags": ["缺货", "全额退款"], "source": "policy_manual_v1", "status": "approved"}

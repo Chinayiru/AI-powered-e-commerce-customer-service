@@ -1,0 +1,54 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "created": "2026-10-28T10:00:00+08:00",
+    "logistics": [
+      {
+        "company": "中通",
+        "consign_time": "2026-11-01 10:00:00",
+        "delivery_time": "2026-11-03 12:00:00",
+        "items": [
+          {
+            "num": 1,
+            "sku_id": "SKU-A"
+          }
+        ],
+        "out_sid": "ZT001",
+        "package_id": "PKG-A"
+      },
+      {
+        "company": "圆通",
+        "consign_time": "2026-11-04 09:00:00",
+        "delivery_time": "",
+        "items": [
+          {
+            "num": 1,
+            "sku_id": "SKU-B"
+          }
+        ],
+        "out_sid": "YT002",
+        "package_id": "PKG-B"
+      }
+    ],
+    "orders": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "3900",
+        "sku_id": "SKU-A",
+        "title": "马克杯"
+      },
+      {
+        "category": "general",
+        "num": 1,
+        "price": "5000",
+        "sku_id": "SKU-B",
+        "title": "托盘"
+      }
+    ],
+    "payment": "8900",
+    "status": "TRADE_SUCCESS",
+    "tid": "TB1002"
+  },
+  "platform": "taobao"
+}

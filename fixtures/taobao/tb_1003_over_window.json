@@ -1,0 +1,28 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "created": "2026-10-20T10:00:00+08:00",
+    "logistics": [
+      {
+        "company": "顺丰",
+        "consign_time": "2026-10-28 10:00:00",
+        "delivery_time": "2026-10-30 09:00:00",
+        "out_sid": "SF003",
+        "package_id": "PKG-1"
+      }
+    ],
+    "orders": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "6800",
+        "sku_id": "SKU-D",
+        "title": "台灯"
+      }
+    ],
+    "payment": "6800",
+    "status": "TRADE_SUCCESS",
+    "tid": "TB1003"
+  },
+  "platform": "taobao"
+}

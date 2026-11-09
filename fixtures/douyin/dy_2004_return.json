@@ -1,0 +1,28 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "create_time": "2026-11-01 09:00:00",
+    "logistics": [
+      {
+        "company": "顺丰",
+        "package_id": "PKG1",
+        "receive_time": "2026-11-06 16:00:00",
+        "ship_time": "2026-11-02 10:00:00",
+        "tracking_no": "SF900"
+      }
+    ],
+    "order_id": "DY2004",
+    "order_status": "3",
+    "pay_amount": "260.00",
+    "product_items": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "260.00",
+        "sku_id": "SKU-K",
+        "title": "羽绒服"
+      }
+    ]
+  },
+  "platform": "douyin"
+}

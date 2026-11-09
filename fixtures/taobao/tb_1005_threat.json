@@ -1,0 +1,28 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "created": "2026-11-02T10:00:00+08:00",
+    "logistics": [
+      {
+        "company": "中通",
+        "consign_time": "2026-11-05 10:00:00",
+        "delivery_time": "2026-11-08 11:00:00",
+        "out_sid": "ZT005",
+        "package_id": "PKG-1"
+      }
+    ],
+    "orders": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "6800",
+        "sku_id": "SKU-G",
+        "title": "电水壶"
+      }
+    ],
+    "payment": "6800",
+    "status": "TRADE_SUCCESS",
+    "tid": "TB1005"
+  },
+  "platform": "taobao"
+}

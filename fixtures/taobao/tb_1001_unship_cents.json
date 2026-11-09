@@ -1,0 +1,20 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "created": "2026-11-08T19:00:00+08:00",
+    "logistics": [],
+    "orders": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "5000",
+        "sku_id": "SKU-CUP",
+        "title": "保温杯 500ml"
+      }
+    ],
+    "payment": "5000",
+    "status": "WAIT_SELLER_SEND_GOODS",
+    "tid": "TB1001"
+  },
+  "platform": "taobao"
+}

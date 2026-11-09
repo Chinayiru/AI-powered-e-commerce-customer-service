@@ -1,0 +1,28 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "created": "2026-11-02T10:00:00+08:00",
+    "logistics": [
+      {
+        "company": "虚拟发货",
+        "consign_time": "2026-11-02 10:05:00",
+        "delivery_time": "2026-11-07 10:05:00",
+        "out_sid": "V001",
+        "package_id": "PKG-1"
+      }
+    ],
+    "orders": [
+      {
+        "category": "digital",
+        "num": 1,
+        "price": "19900",
+        "sku_id": "SKU-H",
+        "title": "虚拟会员年卡"
+      }
+    ],
+    "payment": "19900",
+    "status": "TRADE_SUCCESS",
+    "tid": "TB1006"
+  },
+  "platform": "taobao"
+}
