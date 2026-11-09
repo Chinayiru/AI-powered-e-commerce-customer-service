@@ -95,6 +95,8 @@ def run(
     traces = _Traces()
     order_ref = ticket.order_ref or ""
     approver = confirm.split(":", 1)[1] if confirm and confirm.startswith("human:") else None
+    # run_id 必须在任何分支里都一致：把模型配置也算进去，否则"超时跑"和"正常跑"会同号
+    rid = _run_id(ticket, order_ref, prompt_version(), policy.version, confirm, llm)
 
     # 1) 取单
     t0 = time.perf_counter()
@@ -103,7 +105,7 @@ def run(
         traces.add("fetch_order", True, t0, args={"ref": order_ref})
     except DomainError as exc:
         traces.add("fetch_order", False, t0, args={"ref": order_ref}, error=exc.code.value)
-        return _fail(ticket, traces, t_start, order_ref, ErrorCode.ORDER_NOT_FOUND)
+        return _fail(ticket, traces, t_start, order_ref, ErrorCode.ORDER_NOT_FOUND, rid)
 
     # 2) 组 prompt + 事前预算
     pv = prompt_version()
@@ -113,7 +115,7 @@ def run(
     if est_input > llm.token_budget:
         return _stop(
             ticket, traces, t_start, order_ref, StopReason.budget_exhausted, usage,
-            policy=policy, prompt_version=pv, model=llm.model,
+            policy=policy, rid=rid, prompt_version=pv, model=llm.model,
         )
 
     # 3) 调模型（一次 + 最多一次重试）
@@ -126,7 +128,7 @@ def run(
         traces.add("llm.propose", False, t0, args={"provider": provider.name}, error=ErrorCode.TIMEOUT.value)
         return _stop(
             ticket, traces, t_start, order_ref, StopReason.timeout, usage,
-            policy=policy, prompt_version=pv, model=llm.model, latency_override=elapsed_ms,
+            policy=policy, rid=rid, prompt_version=pv, model=llm.model, latency_override=elapsed_ms,
         )
     traces.add("llm.propose", True, t0, args={"provider": provider.name, "model": llm.model})
 
@@ -145,7 +147,7 @@ def run(
     if proposal is None:
         out = _stop(
             ticket, traces, t_start, order_ref, StopReason.invalid_output, usage,
-            policy=policy, prompt_version=pv, model=llm.model,
+            policy=policy, rid=rid, prompt_version=pv, model=llm.model,
         )
         out.out.draft.risk_flags = ["degraded"]
         return out
@@ -220,7 +222,7 @@ def run(
                 svc.execute(case, approver=approver, now=now)
 
     out = TicketOut(
-        run_id=_run_id(ticket, order_ref, pv, policy.version, confirm),
+        run_id=rid,
         ticket_id=ticket.ticket_id,
         intent=proposal.intent,
         aftersales_type=proposal.aftersales_type,
@@ -257,14 +259,17 @@ def _check_citations(cites: list[Citation], kb: dict[str, str], flags: list[str]
     return kept
 
 
-def _run_id(ticket: TicketIn, order_ref: str, pv: str, policy_version: str, confirm: str | None) -> str:
-    raw = "|".join([ticket.ticket_id, order_ref, pv, policy_version, confirm or "-"])
+def _run_id(ticket: TicketIn, order_ref: str, pv: str, policy_version: str, confirm: str | None, llm: LLMConfig) -> str:
+    raw = "|".join([
+        ticket.ticket_id, order_ref, pv, policy_version, confirm or "-",
+        llm.provider, llm.model, str(llm.token_budget), str(llm.timeout_ms),
+    ])
     return "run_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 
-def _stop(ticket, traces, t_start, order_ref, reason: StopReason, usage: Usage, *, policy, prompt_version: str, model: str, latency_override: int | None = None) -> RunResult:
+def _stop(ticket, traces, t_start, order_ref, reason: StopReason, usage: Usage, *, policy, rid: str, prompt_version: str, model: str, latency_override: int | None = None) -> RunResult:
     out = TicketOut(
-        run_id=_run_id(ticket, order_ref, prompt_version, policy.version, None),
+        run_id=rid,
         ticket_id=ticket.ticket_id,
         intent=Intent.other,
         stop_reason=reason,
@@ -279,9 +284,9 @@ def _stop(ticket, traces, t_start, order_ref, reason: StopReason, usage: Usage, 
     return RunResult(out=out, case=None, trace={})
 
 
-def _fail(ticket, traces, t_start, order_ref, code: ErrorCode) -> RunResult:
+def _fail(ticket, traces, t_start, order_ref, code: ErrorCode, rid: str) -> RunResult:
     out = TicketOut(
-        run_id=_run_id(ticket, order_ref, prompt_version(), "-", None),
+        run_id=rid,
         ticket_id=ticket.ticket_id,
         intent=Intent.other,
         stop_reason=StopReason.degraded,

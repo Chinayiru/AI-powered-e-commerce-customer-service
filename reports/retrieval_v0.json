@@ -2,7 +2,7 @@
   "dataset": "synthetic",
   "provider": "scripted",
   "k": 5,
-  "generated_at": "2026-11-09T17:05:00.769617+00:00",
+  "generated_at": "2026-11-09T17:07:59.778758+00:00",
   "keyword": {
     "retriever": "keyword",
     "recall_at_5": 0.95,

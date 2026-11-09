@@ -87,7 +87,10 @@ def pytest_sessionfinish(session, exitstatus):
         run_id = ",".join(rec.get("run_ids") or []) or "—（契约级，不产生 run）"
         file_part = nodeid.split("::")[0]
         cmd = f"python -m pytest {file_part} -k {ac.lower()}"
-        rows.setdefault(ac, []).append((run_id, cmd, rec.get("outcome", "not-run")))
+        row = (run_id, cmd, rec.get("outcome", "not-run"))
+        bucket = rows.setdefault(ac, [])
+        if row not in bucket:
+            bucket.append(row)
 
     lines = [
         "# 证据索引（自动生成，勿手改）",
