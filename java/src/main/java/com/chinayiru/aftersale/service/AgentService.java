@@ -92,6 +92,8 @@ public class AgentService {
 
     private ResponseEntity<?> doSend(String ticketId, SendRequest request) {
         Ticket ticket = requireTicket(ticketId);
+        // 守卫顺序与契约 §7.2 一致：状态 → 版本 → 草稿版本 → 政策快照 → 金额 → 复核说明 → 内部码。
+        // 任何一步失败都必须抛错，不能留下半确认状态。
         if (!TicketState.SEND_FROM.contains(ticket.getState())) {
             throw new ApiException(ErrorCode.STATE_NOT_ALLOWED, "当前状态不允许确认发送");
         }
@@ -103,6 +105,8 @@ public class AgentService {
             throw new ApiException(ErrorCode.STALE_DRAFT, "草稿已被更新，请刷新后重试");
         }
 
+        // policyCheck 是生成草稿时的快照，send 只读不重算；金额硬上限同样以快照为准。
+        // 这样坐席看到的政策结论与最终发送时完全一致，避免政策版本漂移。
         PolicyCheckView policy = json.read(draft.getPolicyCheckJson(), PolicyCheckView.class);
         if (policy == null || !policy.allowed()) {
             throw new ApiException(ErrorCode.POLICY_REJECTED, "政策校验未通过，不能确认发送");
@@ -121,9 +125,13 @@ public class AgentService {
             throw new ApiException(ErrorCode.INVALID_ARGS, "回复正文不能包含内部状态或字段名");
         }
 
+        // 编辑距离必须由服务端算，前端传入的 edited 不是可信输入；
+        // 该值会写入审计，用于说明坐席是否改过 AI 草稿。
         int distance = editDistance(draft.getReplyDraft(), request.text());
         boolean edited = distance > 0;
 
+        // 第一段事务：确认工单 + 写入坐席回复 + 持久化待执行任务。
+        // 先落库再执行，才能在执行阶段失败时返回 202 并保留可重试依据。
         Ticket confirmed = tx.execute(status -> {
             int rows = ticketMapper.transition(ticketId, ticket.getVersion(),
                     Set.of(ticket.getState().name()), TicketState.CONFIRMED,
@@ -148,6 +156,8 @@ public class AgentService {
             return ticketMapper.findById(ticketId);
         });
 
+        // 第二段事务模拟外部执行：CONFIRMED → EXECUTING → CLOSED。
+        // 执行失败时保留 CONFIRMED、任务标 FAILED，并返回 202，客户端可凭同一 requestId 重试。
         try {
             Ticket closed = tx.execute(status -> {
                 move(confirmed, TicketState.CONFIRMED, TicketState.EXECUTING, null, false, false);

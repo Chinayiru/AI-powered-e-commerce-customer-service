@@ -106,6 +106,7 @@ public class GenerationService {
         List<TicketMessage> messages = messageMapper.listByTicket(ticketId);
         String effectiveMessage = messageText == null ? lastCustomerText(messages) : messageText;
 
+        // AI 调用在事务外执行；超时/5xx 只影响本轮结果，不影响工单已落库的状态。
         AgentContract.AskResponse response;
         try {
             response = agentClient.ask(buildRequest(ticket, effectiveMessage, requestId, attempt, messages),
@@ -115,6 +116,8 @@ public class GenerationService {
             return new GenerationOutcome(ticketMapper.findById(ticketId), null);
         }
 
+        // 咨询中提出退款诉求时，不改变原咨询单语义，而是新建关联售后单；
+        // 原单转 REPLIED，新单继续生成草稿，并把新单 token 回传给客户端。
         if (ticket.getCategory() == Category.CONSULT && response.intent() == IntentType.REFUND_REQUEST) {
             return handleConsultToAftersale(ticket, response, effectiveMessage, requestId, traceId,
                     taskId, epoch, attempt);
@@ -148,6 +151,8 @@ public class GenerationService {
                                                       String taskId, int epoch, int attempt) {
         AssociatedTicketService.Shell shell = tx.execute(status -> {
             Ticket current = ticketMapper.findById(consult.getTicketId());
+            // 发布前三重校验：任务 ID、epoch、attempt 必须仍是当前值，
+            // 否则说明坐席已重新生成/客户已补充消息，本轮结果只能丢弃并记审计。
             if (!current(taskId, epoch, attempt, current)) {
                 audit(consult.getTicketId(), "LATE_RESULT_DROPPED", "consult-refund", traceId);
                 return null;
@@ -183,6 +188,8 @@ public class GenerationService {
         if (shell == null) {
             return new GenerationOutcome(ticketMapper.findById(consult.getTicketId()), null);
         }
+        // 新售后单复用同一 requestId 继续生成，保证 AI 调用、幂等记录与审计链路可关联；
+        // 若已存在未结束的关联单，则只回传其 token，不重复生成。
         if (shell.created()) {
             generate(shell.ticket().getTicketId(), messageText, requestId, traceId);
         }

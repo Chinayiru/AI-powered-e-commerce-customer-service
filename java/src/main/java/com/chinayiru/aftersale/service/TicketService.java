@@ -76,6 +76,10 @@ public class TicketService {
         this.properties = properties;
     }
 
+    /**
+     * 建单入口。幂等范围按契约使用 (userId, endpoint, targetId, requestId)，
+     * targetId 优先取订单号；没有订单号时统一记为 NOORDER，避免空值导致作用域失效。
+     */
     public ResponseEntity<?> create(CreateTicketRequest request, String userId) {
         String orderNo = blankToNull(request.orderNo());
         String targetId = orderNo == null ? "NOORDER" : orderNo;
@@ -87,6 +91,8 @@ public class TicketService {
         if (orderNo != null) {
             orderTools.requireOwned(userId, orderNo);
         }
+        // 同一订单只允许一个未结束的售后单。这里提前查询用于返回友好错误，
+        // 真正的并发兜底仍是数据库 active_order_key 唯一索引（见下方 DuplicateKeyException）。
         if (request.category() == Category.AFTERSALE && orderNo != null) {
             Ticket active = ticketMapper.findByActiveOrderKey(userId + ":" + orderNo);
             if (active != null) {
@@ -94,6 +100,8 @@ public class TicketService {
             }
         }
 
+        // 建单事务：只做「工单 + 首条客户消息 + 初始状态迁移」。
+        // 耗时的 AI/工具调用必须放到事务外，避免长时间占用数据库连接。
         Ticket ticket = tx.execute(status -> {
             LocalDateTime now = TimeUtil.now();
             Ticket value = new Ticket();
@@ -136,6 +144,8 @@ public class TicketService {
             return ticketMapper.findById(value.getTicketId());
         });
 
+        // 事务外触发首轮生成：Python Agent 与工具调用都可能超时，
+        // 失败时由 GenerationService 统一降级为转人工，不会回滚已经创建的工单。
         if (ticket.getState() == TicketState.AI_RUNNING) {
             String message = request.text();
             ticket = generationService.generate(ticket.getTicketId(), message, request.requestId(), null)
@@ -158,6 +168,8 @@ public class TicketService {
             throw new ApiException(ErrorCode.STATE_NOT_ALLOWED, "当前状态不允许继续发送消息");
         }
 
+        // 已转人工的工单不再回 AI：客户消息只入库、推进 epoch 并打上「待坐席处理」语义，
+        // 防止人工接管后又被自动回复打断。
         if (before.getState() == TicketState.TRANSFERRED) {
             Ticket after = tx.execute(status -> {
                 addMessage(ticketId, MessageRole.CUSTOMER, request.text());
@@ -170,6 +182,8 @@ public class TicketService {
                     viewMapper.consumerMessages(messageMapper.listByTicket(ticketId)), null));
         }
 
+        // 其余可回复状态统一进入 AI_RUNNING，并生成新的 generationTaskId。
+        // 旧任务即使在途，后续发布时也会因 epoch/attempt 不匹配被丢弃。
         Ticket running = tx.execute(status -> {
             addMessage(ticketId, MessageRole.CUSTOMER, request.text());
             move(before, before.getState(), TicketState.AI_RUNNING, null, true, null);
