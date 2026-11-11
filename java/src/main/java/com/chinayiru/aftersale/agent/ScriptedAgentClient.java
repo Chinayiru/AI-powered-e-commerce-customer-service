@@ -56,6 +56,8 @@ public class ScriptedAgentClient implements AgentClient {
             "物流", "快递", "到哪", "发货", "签收", "包裹", "运单", "多久", "什么时候到");
     private static final List<String> ELIGIBILITY_WORDS = List.of(
             "能退", "可以退", "可退", "退货", "退换", "拆", "还能退", "退吗");
+    private static final List<String> REFUND_QUESTION_WORDS = List.of(
+            "怎么办", "怎么退", "如何退", "能否", "可以吗", "能吗", "行吗");
 
     private final AppProperties properties;
     private final OrderToolService orderTools;
@@ -87,6 +89,9 @@ public class ScriptedAgentClient implements AgentClient {
         boolean wantsHuman = containsAny(message, HUMAN_WORDS);
         boolean policy = containsAny(message, POLICY_WORDS);
         boolean refundRequest = containsAny(message, REFUND_REQUEST_WORDS);
+        boolean refundQuestion = containsAny(message, REFUND_QUESTION_WORDS)
+                || message.strip().endsWith("吗") || message.strip().endsWith("吗？")
+                || message.strip().endsWith("吗?");
         boolean logistics = containsAny(message, LOGISTICS_WORDS);
         boolean eligibility = containsAny(message, ELIGIBILITY_WORDS);
 
@@ -109,6 +114,9 @@ public class ScriptedAgentClient implements AgentClient {
 
         if (policy) {
             return policyReply(orderNo, order);
+        }
+        if (refundRequest && refundQuestion) {
+            return eligibilityReply(orderNo, order);
         }
         if (refundRequest) {
             return refundRequestReply(orderNo, order);

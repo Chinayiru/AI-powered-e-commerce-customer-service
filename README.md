@@ -1,14 +1,14 @@
-# 售后辅助处理 Agent（Java 业务后端）
+# 售后辅助处理 Agent（Java 业务后端 + Python AI 层）
 
 客户说人话提交售后请求 → Agent 给出**建议**（意图、事实、政策依据、回复草稿）→ 坐席**确认**后生效。
 **所有真实业务执行（退款、改地址、改状态）一律不实施**；落库的只有会话、草稿、工单状态与审计记录。
 
 | 项 | 值 |
 | --- | --- |
-| 阶段 | Java 业务后端 M-S 已实现并通过 19 个 H2 集成测试；Python AI 层不在本仓库 |
+| 阶段 | Java M-S 通过 19 个 H2 集成测试；Python AI 层通过 21 个 pytest，已与 Java HTTP 模式联调 |
 | 契约版本 | `BOUNDARY_v1` **v1.4.1** ↔ `openapi.yaml` **v1.5.1**（版本独立演进；对应关系与文件指纹见 `docs/contract-snapshot.json`） |
 | 执行模式 | `SIMULATED`（演示不碰真实资金） |
-| 技术栈 | Java 17 + Spring Boot 3.3.5 + MyBatis + H2/MySQL；Python（FastAPI + LangGraph）为外部 AI 层 |
+| 技术栈 | Java 17 + Spring Boot 3.3.5 + MyBatis + H2/MySQL；Python 3.12 + FastAPI + Pydantic v2（规则式 Agent，未接 LangGraph/LLM） |
 
 ---
 
@@ -30,10 +30,14 @@
 │   ├── src/main/resources/   application*.yml、H2/MySQL DDL
 │   ├── src/test/java/...     ApiIntegrationTest（19 用例）
 │   └── README.md             启动、接口冒烟、实现取舍、测试映射
+├── python/                   FastAPI 只读 AI 层
+│   ├── app/                  契约、意图/槽位、检索、工具客户端、草稿
+│   ├── tests/                pytest（21 用例）
+│   └── README.md             启动、环境变量、与 Java 联调、规则说明
 └── README.md
 ```
 
-Python 脚本已按用户要求删除；本仓库只保留 Java 实现与契约文档。Java 端默认使用内置 `scripted` Agent 桩完成 M-S 验收，也可通过 `app.agent.mode=http` 接外部 Python `/internal/agent/ask`。
+本仓库包含 Java 与 Python 两层。Java 默认可用内置 `scripted` Agent 桩完成 M-S 验收；设置 `--app.agent.mode=http` 后调用 Python 的 `/internal/agent/ask`。
 
 ---
 
@@ -73,9 +77,15 @@ mvn -B test                 # 19 个 H2 集成测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
+
+# 另开终端：Python AI 层
+cd python
+pip install -r requirements.txt
+python -m pytest -q         # 21 个 pytest
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL80 服务在跑但无 CLI 与账号，dev 先用 H2。完整接口冒烟、夹具、实现取舍见 `java/README.md`。
+联调时 Java 加 `--app.agent.mode=http`，并保证两端 `hmac-secret` 一致。本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL80 服务在跑但无 CLI 与账号，dev 先用 H2。完整接口冒烟见 `java/README.md`，Python 规则与联调见 `python/README.md`。
 
 ---
 
@@ -84,8 +94,9 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 | 指标 | 状态 |
 | --- | --- |
 | Java M-S 集成测试 | 19/19 通过（H2）；真实并发竞争、执行失败 202 分支未做线程级验证 |
-| 意图准确率 / 槽位 F1 / 引用精确率 | **未测**（M-Q 不在本仓库；50 例 holdout 需 Python AI 层跑） |
-| 端到端闭环 | Java 侧闭环已通：建单 → 生成草稿 → 坐席确认 → `CLOSED` |
+| Python AI 单元测试 | 21/21 通过（规则式桩，FakeTools）；未接真实 LLM |
+| 意图准确率 / 槽位 F1 / 引用精确率 | **未测**（M-Q 需 50 例 holdout 与真实模型，当前为规则式基线） |
+| 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
 | MySQL 真机 | DDL 已提供，本机未连 MySQL 验证生成列/唯一索引 |
 | 延迟 / 成本 | 未采样 |
 
@@ -111,3 +122,4 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 4. `docs/TOOLS.md` + `docs/AGENT_RAG_SPEC.md` —— 谁提供事实、谁说人话
 5. `docs/TEST_PLAN.md` + `docs/DEMO.md` —— 怎么证明、怎么讲
 6. `java/README.md` —— Java 实现、启动方式、取舍与测试映射
+7. `python/README.md` —— Python 规则、启动方式、与 Java 联调
