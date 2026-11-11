@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: aftersale-agent-java
+  profiles:
+    default: dev
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  mvc:
+    problemdetails:
+      enabled: false
+
+server:
+  port: 8080
+  error:
+    include-message: never
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  demo:
+    # 演示身份头只在 dev/test 打开；prod 必须为 false。
+    allow-header-identity: true
+    allowed-user-ids:
+      - U001
+      - U002
+  security:
+    hmac-secret: ${APP_HMAC_SECRET:dev-only-hmac-secret-change-me-please}
+    agent-token: ${APP_AGENT_TOKEN:demo-agent-token}
+    ticket-token-ttl-hours: 168
+    internal-identity-ttl-seconds: 300
+    nonce-cache-seconds: 300
+    # 未接入 SSO 时 prod 启动即失败（见 StartupGuard）。
+    sso-enabled: false
+  intent:
+    confidence-threshold: 0.60
+  refund:
+    auto-suggest-limit-cents: 5000
+  consult:
+    stall-rounds: 2
+  policy:
+    version: "2026-11"
+  execution:
+    # 一期只允许 SIMULATED；REAL 未实现。
+    mode: SIMULATED
+  idempotency:
+    lease-seconds: 60
+  agent:
+    # scripted：Java 内置的确定性桩，替代尚未启动的 Python AI 层，用于 M-S 验收。
+    # http：调用 Python /internal/agent/ask（生产/联调）。
+    mode: scripted
+    base-url: http://localhost:8000
+    timeout-ms: 8000
+    prompt-version: p1.0.0
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] %logger{36} - %msg%n"

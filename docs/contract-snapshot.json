@@ -1,0 +1,28 @@
+{
+  "snapshot": "contract-2026-11-11-02",
+  "created_at": "2026-11-11T14:20:00+08:00",
+  "note": "只记录版本对应关系与文件指纹，不重复存放枚举与接口规则。两份契约版本独立演进，不要求号段相同。",
+  "boundary": {
+    "file": "docs/BOUNDARY_v1.md",
+    "version": "1.4.1",
+    "sha256": "cfd2430cff6b36905d7f05ee1a10d237c556ebe18a1552e05d7c67e46b454c5c"
+  },
+  "openapi": {
+    "file": "docs/api/openapi.yaml",
+    "version": "1.5.1",
+    "sha256": "6ff8ca754f957609e264505589d0f2ab9c1686821905dd3e602ebfb7c22cf9b6"
+  },
+  "changed_in_this_snapshot": [
+    "AC22 越权订单改为 404 ORDER_NOT_FOUND（403 只留给 ticketToken 不匹配）",
+    "send 补 202：受理成功、执行未完成；200 收紧为三段全部完成；补 500",
+    "TOOL_FAILED 明确包含 AI 服务故障，靠 AGENT_UNAVAILABLE 与组件日志区分",
+    "投诉关键词归 OUT_OF_SCOPE，USER_REQUESTED 只给明确要求人工",
+    "OpenAPI 消费者查询描述由「五态」改为「六态」",
+    "契约版本改为独立演进，由本快照记录对应关系"
+  ],
+  "open_issues": [
+    "T3 仍收 draftVersion，与「保存成功后分配」冲突（R7）",
+    "草稿唯一键：BOUNDARY 写 (ticketId, generationTaskId)，DDL 为 uk_task(generation_task_id)（R6）",
+    "合入门仍写「至少 25 条绿」，且 regenerate 无直接 AC（R9）"
+  ]
+}

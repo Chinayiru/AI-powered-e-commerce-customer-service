@@ -1,0 +1,852 @@
+openapi: 3.0.3
+info:
+  title: 售后辅助处理 · 接口契约
+  version: 1.5.1
+  description: |
+    对应 docs/BOUNDARY_v1.md v1.4.1（2026-11-11），对应关系见 docs/contract-snapshot.json。
+    v1.4.0：消费者响应改用 displayState + version；撤销/追加消息所需版本号补齐。
+    v1.5.0：售后补 REPLIED（10 态）；`createdTicket` 回传关联单凭据；
+    消费者追加消息响应去掉内部 `stalledRounds`；`ask` 的 history 固定为 6 轮/12 条 + `summary`；
+    工具端点补齐错误响应；`reply`/`close` 必须带 `requestId`。
+    v1.5.1（随 BOUNDARY v1.4.1）：`send` 新增 `202`（受理成功、执行未完成，`state=CONFIRMED`），
+    `200` 语义收紧为三段全部完成（`state=CLOSED`），补 `500`；消费者查询描述改「六态」。
+    接口形状未新增请求/响应字段。
+    分三组：消费者 /api/**、坐席 /api/agent/**、内部 /internal/**（Java ↔ Python ↔ 工具）。
+    所有写接口必须带 requestId（UUIDv4），幂等；冲突语义见 errors。
+    **未知字段策略**：消费者与坐席端点忽略未知字段（向前兼容）；`/internal/**` 严格拒绝（`additionalProperties: false`）。
+    本文件是前后端与双栈对接的唯一来源，改契约先改本文件并升版本。
+    **可空写法**：3.0.3 里可空枚举用 `allOf + nullable`（springdoc / openapi-diff 均支持）；不要在 `enum` 里塞 `null`（3.1 才允许），也不要为可空性复制一份枚举（会漂移）。
+
+servers:
+  - url: http://{host}:{port}
+    description: Java 主服务（本地，/api/** 与 /internal/tools/**）
+    variables:
+      host: { default: localhost, description: 部署时覆盖为实际域名或 IP，不写死在契约里 }
+      port: { default: '8080' }
+  - url: http://{host}:{pyPort}
+    description: Python AI 层（本地，仅 /internal/agent/**）
+    variables:
+      host: { default: localhost }
+      pyPort: { default: '8000' }
+
+tags:
+  - name: consumer
+  - name: agent
+  - name: internal
+
+security: []
+
+paths:
+  /api/tickets:
+    post:
+      tags: [consumer]
+      summary: 建单（咨询或售后）
+      description: 入口身份由 X-User-Id 提供（仅演示，白名单 U001/U002）；成功后签发 ticketToken。
+      parameters:
+        - $ref: '#/components/parameters/XUserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTicketRequest' }
+            examples:
+              refund:
+                value: { category: AFTERSALE, text: "订单 O1001 我不想要了，想退款", requestId: "6f0c1c1e-6a4f-4a0e-9f0e-2f6f0d5c1a11" }
+              consult:
+                value: { category: CONSULT, text: "退货运费一般谁承担？", requestId: "0b3f9c2a-1f1e-4a77-9a2d-8f0b7c3d2e44" }
+      responses:
+        '201':
+          description: 已建单
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketCreated' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/ForbiddenScope' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+
+  /api/tickets/{ticketId}:
+    get:
+      tags: [consumer]
+      summary: 消费者查询状态与最新回复（客户语义六态）
+      security: [{ ticketToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsumerTicketView' }
+        '403': { $ref: '#/components/responses/ForbiddenScope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/tickets/{ticketId}/messages:
+    post:
+      tags: [consumer]
+      summary: 客户追加消息（驱动多轮或售后重生成）
+      security: [{ ticketToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MessageRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResult' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+
+  /api/tickets/{ticketId}/cancel:
+    post:
+      tags: [consumer]
+      summary: 客户撤销（白名单：PENDING_ACCEPT/WAITING_INPUT/AI_RUNNING/DRAFT_READY/REPLIED/TRANSFERRED）
+      security: [{ ticketToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelRequest' }
+      responses:
+        '200':
+          description: 已撤销
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CancelResult' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/me/orders:
+    get:
+      tags: [consumer]
+      summary: 我的订单（逐单经 queryOrder 取，不读夹具）
+      parameters:
+        - $ref: '#/components/parameters/XUserId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OrderSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /api/agent/tickets/{ticketId}:
+    get:
+      tags: [agent]
+      summary: 坐席工作台数据（三栏）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentTicketView' }
+        '403': { $ref: '#/components/responses/ForbiddenScope' }
+
+  /api/agent/tickets/{ticketId}/send:
+    post:
+      tags: [agent]
+      summary: 确认并发送（确认即迁移 CONFIRMED，随后模拟执行；全完成 200，受理未完成 202）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendRequest' }
+      responses:
+        '200':
+          description: 三段全部完成；`state=CLOSED`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendResult' }
+        '202':
+          description: |
+            受理成功、执行未完成：确认已提交（`state=CONFIRMED` 或当前实际状态），
+            模拟执行失败或尚未完成，已落库待重试。详细错误码见坐席详情与审计，不在响应体新增字段。
+            同一 `requestId` 重复提交返回原受理结果（仍为 202），不得重复批准或执行。
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendResult' }
+        '409':
+          description: STALE_DRAFT / STALE_STATE / POLICY_REJECTED / STATE_NOT_ALLOWED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /api/agent/tickets/{ticketId}/regenerate:
+    post:
+      tags: [agent]
+      summary: 重生成草稿（旧草稿 superseded，taskEpoch+1）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegenerateRequest' }
+      responses:
+        '202':
+          description: 已受理
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketState' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/agent/tickets/{ticketId}/handoff:
+    post:
+      tags: [agent]
+      summary: 转交人工（9 枚举之一）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HandoffRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketState' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+
+  /api/agent/tickets/{ticketId}/reply:
+    post:
+      tags: [agent]
+      summary: 转交后直接回复客户（TRANSFERRED → REPLIED）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplyRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketState' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/agent/tickets/{ticketId}/close:
+    post:
+      tags: [agent]
+      summary: 关闭工单（TRANSFERRED/REPLIED → CLOSED）
+      security: [{ agentToken: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CloseRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketState' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /internal/agent/ask:
+    post:
+      tags: [internal]
+      summary: Java → Python，取结构化建议（Python 无状态、不落库、不写草稿）
+      security: [{ internalHmac: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AskRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResponse' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+
+  /internal/tools/queryOrder:
+    post:
+      tags: [internal]
+      summary: 只读·订单（userId 取自签名身份，不接受入参）
+      security: [{ internalHmac: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderQuery' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+
+  /internal/tools/getLogistics:
+    post:
+      tags: [internal]
+      summary: 只读·物流（一单可多包裹）
+      security: [{ internalHmac: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LogisticsQuery' }
+      responses:
+        '200':
+          description: OK（未发货时 status=NOT_SHIPPED、shipments 为空数组；不是错误）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Shipment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/InvalidArgs' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '504': { $ref: '#/components/responses/Timeout' }
+
+components:
+  securitySchemes:
+    ticketToken:
+      type: http
+      scheme: bearer
+      description: 建单后签发，HMAC 绑定 ticketId+userId+exp
+    agentToken:
+      type: apiKey
+      in: header
+      name: X-Agent-Token
+      description: 演示用固定值，环境变量注入
+    internalHmac:
+      type: apiKey
+      in: header
+      name: X-Internal-Identity
+      description: HMAC 签名 {userId, role, exp, nonce}；nonce 5 分钟内唯一
+
+  parameters:
+    TicketId:
+      name: ticketId
+      in: path
+      required: true
+      schema: { type: string, example: T202611100001 }
+    XUserId:
+      name: X-User-Id
+      in: header
+      required: true
+      description: 仅演示环境；白名单 U001/U002
+      schema: { type: string, enum: [U001, U002] }
+
+  responses:
+    InvalidArgs:
+      description: 参数非法
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthenticated:
+      description: 未认证
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ForbiddenScope:
+      description: ticketToken 与 ticketId 不匹配（订单级越权用 404，防枚举）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: 不存在
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: 状态/幂等冲突
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unavailable:
+      description: 下游不可用
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Timeout:
+      description: 下游超时
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    InternalError:
+      description: 服务端内部错误（含 PERSISTENCE_FAILED）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message, traceId, retryable]
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_ARGS
+            - UNAUTHENTICATED
+            - FORBIDDEN_SCOPE
+            - ORDER_NOT_FOUND
+            - TICKET_NOT_FOUND
+            - STATE_NOT_ALLOWED
+            - DUPLICATE_REQUEST
+            - IDEMPOTENCY_CONFLICT
+            - IN_PROGRESS
+            - STALE_DRAFT
+            - STALE_STATE
+            - POLICY_REJECTED
+            - REVIEW_NOTE_REQUIRED
+            - TOOL_UNAVAILABLE
+            - TOOL_TIMEOUT
+            - AGENT_UNAVAILABLE
+            - PERSISTENCE_FAILED
+        message: { type: string }
+        traceId: { type: string }
+        retryable: { type: boolean }
+
+    CreateTicketRequest:
+      type: object
+      required: [category, text, requestId]
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        text: { type: string, minLength: 1, maxLength: 500 }
+        orderNo:
+          type: string
+          nullable: true
+          description: AFTERSALE 可暂缺；生成草稿前必填
+        requestId: { type: string, format: uuid }
+
+    DisplayState:
+      type: string
+      description: 客户语义状态，消费者响应里**唯一**允许出现的状态字段
+      enum: [处理中, 待补充信息, 待人工处理, 已回复, 已完成, 已取消]
+
+    TicketCreated:
+      type: object
+      required: [ticketId, ticketToken, displayState, version, category, createdAt, executionMode]
+      properties:
+        ticketId: { type: string }
+        ticketToken: { type: string }
+        displayState: { $ref: '#/components/schemas/DisplayState' }
+        version: { type: integer, minimum: 1, description: 后续追加消息/撤销需回传的乐观锁版本 }
+        category: { $ref: '#/components/schemas/Category' }
+        createdAt: { type: string, format: date-time }
+        executionMode: { type: string, enum: [SIMULATED, REAL] }
+      additionalProperties: false
+
+    ConsumerTicketView:
+      type: object
+      required: [ticketId, displayState, version, updatedAt, messages]
+      properties:
+        ticketId: { type: string }
+        displayState: { $ref: '#/components/schemas/DisplayState' }
+        version: { type: integer, minimum: 1 }
+        reply: { type: string, nullable: true, description: 最新一条对客回复正文 }
+        messages:
+          type: array
+          description: 只含 CUSTOMER 与 AGENT；SYSTEM 永不外露
+          items: { $ref: '#/components/schemas/ConsumerMessage' }
+        updatedAt: { type: string, format: date-time }
+      additionalProperties: false
+
+    ConsumerMessage:
+      type: object
+      description: 消费者可见消息（白名单：仅 CUSTOMER/AGENT）
+      required: [id, role, text, createdAt]
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [CUSTOMER, AGENT] }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+      additionalProperties: false
+
+    ChatMessage:
+      type: object
+      description: 坐席/内部消息（含 SYSTEM）；不得用于任何消费者响应
+      required: [id, role, text, createdAt]
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [CUSTOMER, AGENT, SYSTEM] }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    MessageRequest:
+      type: object
+      description: 公共接口保持向前兼容——**未知字段忽略**（不报 400）；内部 /internal/** 接口则严格拒绝未知字段。
+      required: [text, requestId]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 500 }
+        requestId: { type: string, format: uuid }
+
+    MessageResult:
+      type: object
+      required: [displayState, version, messages]
+      properties:
+        displayState: { $ref: '#/components/schemas/DisplayState' }
+        version: { type: integer, minimum: 1 }
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/ConsumerMessage' }
+        createdTicket:
+          allOf:
+            - $ref: '#/components/schemas/TicketCreated'
+          description: 仅"咨询转售后"新建关联单时出现；客户据此拿到新单 ticketId 与 ticketToken
+      additionalProperties: false
+
+    CancelRequest:
+      type: object
+      required: [requestId, expectedVersion]
+      properties:
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer, minimum: 1 }
+      additionalProperties: false
+
+    CancelResult:
+      type: object
+      required: [displayState, version]
+      properties:
+        displayState: { $ref: '#/components/schemas/DisplayState' }
+        version: { type: integer, minimum: 1 }
+      additionalProperties: false
+
+    OrderSummary:
+      type: object
+      required: [orderNo, statusLabel, amountCents]
+      properties:
+        orderNo: { type: string }
+        statusLabel: { type: string, description: 已发货/已签收/待发货 }
+        amountCents: { type: integer }
+
+    AgentTicketView:
+      type: object
+      required: [ticket, messages, toolCalls]
+      properties:
+        ticket: { $ref: '#/components/schemas/TicketMeta' }
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/ChatMessage' }
+        intent: { type: string, nullable: true }
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: AI 不可用时为 null；不得为了满足必填而伪造
+        needHumanReview: { type: boolean }
+        draft: { $ref: '#/components/schemas/Draft' }
+        policyCheck:
+          allOf:
+            - $ref: '#/components/schemas/PolicyCheck'
+          nullable: true
+          description: 无草稿（如纯咨询/降级）时为 null
+        toolCalls:
+          type: array
+          items: { $ref: '#/components/schemas/ToolCall' }
+
+    TicketMeta:
+      type: object
+      required: [ticketId, category, state, version, executionMode]
+      properties:
+        ticketId: { type: string }
+        category: { $ref: '#/components/schemas/Category' }
+        state: { $ref: '#/components/schemas/TicketStateCode' }
+        version: { type: integer }
+        orderNo: { type: string, nullable: true }
+        transferReason: { type: string, nullable: true }
+        executionMode: { type: string, enum: [SIMULATED, REAL] }
+        createdAt: { type: string, format: date-time }
+
+    Draft:
+      type: object
+      nullable: true
+      properties:
+        draftId: { type: string }
+        draftVersion: { type: integer }
+        generationTaskId: { type: string }
+        suggestedAction: { $ref: '#/components/schemas/SuggestedAction' }
+        replyDraft: { type: string }
+        citations:
+          type: array
+          items: { $ref: '#/components/schemas/Citation' }
+        confidence: { type: number }
+        replyType: { type: string, enum: [INFORMATIONAL, DECISIONAL] }
+        superseded: { type: boolean }
+
+    SuggestedAction:
+      type: object
+      properties:
+        action: { type: string, enum: [REFUND, NONE] }
+        amountCents: { type: integer, nullable: true }
+        needHumanConfirm: { type: boolean }
+
+    Citation:
+      type: object
+      required: [docId, title, policyVersion]
+      properties:
+        docId: { type: string }
+        title: { type: string }
+        clauseId: { type: string, nullable: true }
+        policyVersion: { type: string }
+
+    PolicyCheck:
+      type: object
+      required: [allowed, needHumanConfirm]
+      properties:
+        allowed: { type: boolean }
+        code: { type: string, example: REFUND_AFTER_SHIP }
+        policyVersion: { type: string }
+        clauseId: { type: string, nullable: true }
+        maxRefundableCents: { type: integer }
+        needHumanConfirm: { type: boolean }
+
+    ToolCall:
+      type: object
+      required: [step, name, ok]
+      properties:
+        step: { type: integer }
+        name: { type: string }
+        ok: { type: boolean }
+        latencyMs: { type: integer }
+        errorCode: { type: string, nullable: true }
+        summary: { type: string }
+
+    SendRequest:
+      type: object
+      required: [text, draftVersion, expectedVersion, requestId]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 500 }
+        draftVersion: { type: integer }
+        reviewNote:
+          type: string
+          minLength: 5
+          description: needHumanReview=true 时必填
+        expectedVersion: { type: integer }
+        requestId: { type: string, format: uuid }
+
+    SendResult:
+      type: object
+      required: [state, edited, editDistance, draftVersion]
+      properties:
+        state: { $ref: '#/components/schemas/TicketStateCode' }
+        edited: { type: boolean, description: 服务端计算，不信任前端 }
+        editDistance: { type: integer }
+        draftVersion: { type: integer }
+
+    RegenerateRequest:
+      type: object
+      required: [requestId, expectedVersion]
+      properties:
+        note: { type: string }
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer }
+
+    HandoffRequest:
+      type: object
+      required: [reason, requestId, expectedVersion]
+      properties:
+        reason: { $ref: '#/components/schemas/TransferReason' }
+        note: { type: string }
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer }
+
+    ReplyRequest:
+      type: object
+      required: [text, requestId, expectedVersion]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 500 }
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer }
+
+    CloseRequest:
+      type: object
+      required: [requestId, expectedVersion]
+      properties:
+        note: { type: string }
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer }
+
+    AskRequest:
+      type: object
+      required: [traceId, ticketId, requestId, attempt, taskEpoch, userId, category, message]
+      additionalProperties: false
+      properties:
+        traceId: { type: string }
+        ticketId: { type: string }
+        requestId: { type: string, format: uuid }
+        attempt: { type: integer }
+        taskEpoch: { type: integer }
+        userId: { type: string }
+        category: { $ref: '#/components/schemas/Category' }
+        message: { type: string }
+        context:
+          type: object
+          additionalProperties: false
+          properties:
+            orderNo: { type: string, nullable: true }
+            summary:
+              type: string
+              maxLength: 300
+              description: 超出 6 轮的历史压缩；Java 生成，不得含内部码
+            history:
+              type: array
+              maxItems: 12
+              description: 最近 6 轮（1 轮 = 客户 1 条 + 坐席 1 条），单条 text ≤500 字
+              items:
+                type: object
+                additionalProperties: false
+                required: [role, text]
+                properties:
+                  role: { type: string, enum: [CUSTOMER, AGENT] }
+                  text: { type: string, maxLength: 500 }
+                  createdAt: { type: string, format: date-time }
+
+    AskResponse:
+      type: object
+      description: Python 的只读建议。**不含 `policyCheck`**——能否退由 Java 规则引擎判定，Python 只给事实与草稿。
+      required: [intent, confidence, replyType, needHumanReview, degraded, model]
+      additionalProperties: false
+      properties:
+        intent:
+          type: string
+          enum: [REFUND_ELIGIBILITY, REFUND_REQUEST, LOGISTICS, POLICY, OTHER, HANDOFF]
+        slots:
+          type: object
+          properties:
+            orderNo: { type: string, nullable: true }
+            missing: { type: array, items: { type: string } }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        replyType: { type: string, enum: [INFORMATIONAL, DECISIONAL] }
+        needHumanReview: { type: boolean }
+        transferReason:
+          allOf:
+            - $ref: '#/components/schemas/TransferReason'
+          nullable: true
+          description: 未转交时为 null
+        suggestedAction: { $ref: '#/components/schemas/SuggestedAction' }
+        replyDraft: { type: string }
+        citations:
+          type: array
+          items: { $ref: '#/components/schemas/Citation' }
+        degraded: { type: boolean }
+        model:
+          type: object
+          properties:
+            provider: { type: string }
+            promptVersion: { type: string }
+
+    OrderQuery:
+      type: object
+      required: [orderNo]
+      additionalProperties: false
+      properties:
+        orderNo: { type: string }
+
+    LogisticsQuery:
+      type: object
+      required: [orderNo]
+      additionalProperties: false
+      properties:
+        orderNo: { type: string }
+
+    Order:
+      type: object
+      required: [orderNo, userId, status, amountCents, refundableAmountCents]
+      properties:
+        orderNo: { type: string }
+        userId: { type: string }
+        status: { type: string, enum: [PAID, SHIPPED, DELIVERED, CLOSED] }
+        amountCents: { type: integer }
+        refundedAmountCents: { type: integer }
+        refundableAmountCents: { type: integer }
+        paidAt: { type: string, format: date-time }
+        deliveredAt: { type: string, format: date-time, nullable: true }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              skuId: { type: string }
+              title: { type: string }
+              qty: { type: integer }
+              unitAmountCents: { type: integer }
+
+    Shipment:
+      type: object
+      required: [orderNo, status, shipments]
+      properties:
+        orderNo: { type: string }
+        status: { type: string, enum: [NOT_SHIPPED, IN_TRANSIT, DELIVERED, EXCEPTION] }
+        shipments:
+          type: array
+          items:
+            type: object
+            properties:
+              carrierCode: { type: string }
+              trackingNo: { type: string }
+              status: { type: string }
+              events:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    at: { type: string, format: date-time }
+                    code: { type: string }
+                    text: { type: string }
+
+    TicketState:
+      type: object
+      required: [ticketId, state, version]
+      properties:
+        ticketId: { type: string }
+        state: { $ref: '#/components/schemas/TicketStateCode' }
+        version: { type: integer }
+
+    TicketStateCode:
+      type: string
+      description: |
+        CONSULT 7 态：OPEN/AI_RUNNING/WAITING_INPUT/REPLIED/TRANSFERRED/CLOSED/CANCELLED
+        AFTERSALE 10 态：PENDING_ACCEPT/AI_RUNNING/WAITING_INPUT/DRAFT_READY/CONFIRMED/EXECUTING/TRANSFERRED/REPLIED/CLOSED/CANCELLED
+        （售后与咨询共享 REPLIED：转人工后坐席直接答复）
+      enum: [OPEN, PENDING_ACCEPT, AI_RUNNING, WAITING_INPUT, DRAFT_READY, CONFIRMED, EXECUTING, REPLIED, TRANSFERRED, CLOSED, CANCELLED]
+
+    Category:
+      type: string
+      enum: [CONSULT, AFTERSALE]
+
+    TransferReason:
+      type: string
+      enum:
+        - LOW_CONFIDENCE
+        - NO_EVIDENCE
+        - POLICY_BLOCKED
+        - TOOL_FAILED
+        - AMBIGUOUS_ORDER
+        - ORDER_NOT_FOUND
+        - OUT_OF_SCOPE
+        - USER_REQUESTED
+        - INSUFFICIENT_INFO

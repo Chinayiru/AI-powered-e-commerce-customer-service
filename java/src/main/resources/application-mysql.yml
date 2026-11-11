@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:aftersale}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER:aftersale}
+    password: ${DB_PASSWORD:aftersale}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema-mysql.sql
+      encoding: UTF8
+      continue-on-error: false
+
+app:
+  demo:
+    allow-header-identity: false
