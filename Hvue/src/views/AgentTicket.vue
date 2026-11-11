@@ -1,4 +1,6 @@
 <script setup>
+// 坐席三栏工作台：左栏对话与工单元信息，中栏 AI 证据与政策校验，右栏草稿编辑。
+// 所有写操作都携带 expectedVersion / requestId；并发冲突由服务端裁决，前端只展示错误。
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import {

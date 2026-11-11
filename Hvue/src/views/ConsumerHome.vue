@@ -1,4 +1,6 @@
 <script setup>
+// 客户首页：选择订单、描述问题、创建咨询或售后单。
+// 页面只使用对外字段（ticketId / displayState / ticketToken），不展示意图、置信度等内部信息。
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ApiError, createTicket, listOrders, newRequestId } from '../api'

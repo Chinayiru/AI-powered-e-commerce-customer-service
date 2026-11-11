@@ -1,4 +1,6 @@
 <script setup>
+// 客户会话页：凭 ticketToken 拉取 ConsumerTicketView，只渲染 displayState 与客户/坐席消息。
+// createdTicket 表示咨询已升级为关联售后单，需要记住新单 token 才能继续访问。
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { ApiError, addMessage, cancelTicket, getTicket, newRequestId } from '../api'

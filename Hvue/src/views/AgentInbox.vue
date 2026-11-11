@@ -1,4 +1,6 @@
 <script setup>
+// 坐席检索页：只负责选择工单、保存坐席令牌和展示最近访问记录。
+// 工单是否可操作、可发送，全部以服务端返回的状态和错误码为准。
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { recentTickets, session } from '../store'

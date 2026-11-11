@@ -1,4 +1,6 @@
 <script setup>
+// 演示说明页：集中说明三层职责、推荐演示路径与能力边界，
+// 避免演示时把 SIMULATED 执行误当成真实退款。
 const flow = [
   '客户在首页选择订单，描述问题；建单响应返回 ticketId 与 ticketToken。',
   'Java 校验状态与归属，调用 Python /internal/agent/ask 获取意图、槽位、引用与草稿。',

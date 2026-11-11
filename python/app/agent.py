@@ -54,6 +54,7 @@ class AgentService:
         history = request.context.history if request.context else []
         slots = extract_slots(request.message, context_order, [item.text for item in history])
 
+        # 多个订单号时不猜测用户指哪一个，直接交给人工确认，避免答错订单。
         if slots.ambiguous:
             return self._handoff(
                 Intent.HANDOFF,
@@ -66,6 +67,8 @@ class AgentService:
         order_no = slots.order_no
         missing = [] if order_no else ["orderNo"]
 
+        # 安全闸、越界诉求、明确要求人工都走 HANDOFF；Python 只标记原因，
+        # 真正的状态迁移、是否允许发送仍由 Java 裁决。
         if result.intent == Intent.HANDOFF:
             return self._handoff(
                 result.intent,
@@ -75,6 +78,7 @@ class AgentService:
                 Slots(orderNo=order_no, missing=[]),
             )
 
+        # 政策咨询不依赖订单，但必须有可引用条款；检索不到就转人工，不凭记忆回答。
         if result.intent == Intent.POLICY:
             chunks = retrieve(request.message, self.settings.policy_version)
             if not chunks:
@@ -96,6 +100,8 @@ class AgentService:
                 model=self._model(),
             )
 
+        # 退款、退款资格、物流都必须先拿到订单号并查到真实订单，
+        # 否则只能追问，不能编造订单状态或金额。
         needs_order = result.intent in (
             Intent.REFUND_REQUEST,
             Intent.REFUND_ELIGIBILITY,
@@ -136,6 +142,7 @@ class AgentService:
             if shipment is None:
                 return self._order_not_found(order_no, result.intent)
 
+        # 订单类回答同样要求有政策依据；没有引用时降级为人工，避免“看起来确定”的幻觉。
         chunks = retrieve(request.message, self.settings.policy_version)
         if needs_order and not chunks:
             return self._handoff(
@@ -170,6 +177,8 @@ class AgentService:
                 model=self._model(),
             )
 
+        # 退款请求：Python 只根据工具返回的可退金额给出建议，不计算政策上限；
+        # Java 会用自己的规则引擎重新核算 maxRefundableCents 并生成 policyCheck。
         if result.intent == Intent.REFUND_REQUEST and order is not None:
             return self._refund_request(request, result.confidence, order, chunks)
 
