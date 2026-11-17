@@ -164,11 +164,11 @@ mvn -B test
 - 内部工具身份、nonce 重放、越权 404；
 - `handoff → reply → close` 与 `send` 幂等后消费者看到 `CLOSED`。
 
-未覆盖/未验证：真实并发竞争（AC03/AC12/AC15 的线程级竞争）、执行失败 202 分支（模拟执行恒成功）、真实 MySQL 8 的生成列/唯一索引、Python 真实模型效果（M-Q）。
+未覆盖/未验证：真实并发竞争（AC03/AC12/AC15 的线程级竞争）、执行失败 202 分支（模拟执行恒成功）、Python 真实模型效果（M-Q）。
 
 ## 6. 已知限制
 
-- H2 的 MySQL 兼容模式不等于 MySQL 真机；`schema-mysql.sql` 中 `STORED` 生成列与唯一索引需在 MySQL 8 上再跑一次 DDL 验证。
+- H2 的 MySQL 兼容模式不等于 MySQL 真机；`schema-mysql.sql` 的 `STORED` 生成列、唯一索引与取号 upsert 已在本机 MySQL 8.0.30 验证（2026-11-17），H2 仍只用于快速测试。
 - 取号使用 `ticket_sequence` 表 + 单实例 `synchronized`；多实例部署需改为数据库原子取号或分布式 ID。
 - 未包含前端、Python AI 层、真实 SSO、真实退款通道。
 - `X-User-Id` 演示身份仅用于 M-S 验收；`prod` profile 会在启动时拒绝演示配置。

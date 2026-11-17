@@ -85,7 +85,20 @@ python -m pytest -q         # 21 个 pytest
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-联调时 Java 加 `--app.agent.mode=http`，并保证两端 `hmac-secret` 一致。本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL80 服务在跑但无 CLI 与账号，dev 先用 H2。完整接口冒烟见 `java/README.md`，Python 规则与联调见 `python/README.md`。
+联调时 Java 加 `--app.agent.mode=http`，并保证两端 `hmac-secret` 一致。本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL 8.0.30 已在本机验证：库 `aftersale`、应用账号 `aftersale`，`schema-mysql.sql` 可直接初始化；dev 默认仍用 H2。完整接口冒烟见 `java/README.md`，Python 规则与联调见 `python/README.md`。
+
+MySQL 8 初始化与启动（可选）：
+
+```sql
+CREATE DATABASE IF NOT EXISTS aftersale
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE USER IF NOT EXISTS 'aftersale'@'localhost' IDENTIFIED BY 'aftersale';
+GRANT ALL PRIVILEGES ON aftersale.* TO 'aftersale'@'localhost';
+```
+
+```powershell
+java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.active=mysql
+```
 
 ---
 
@@ -97,7 +110,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 | Python AI 单元测试 | 21/21 通过（规则式桩，FakeTools）；未接真实 LLM |
 | 意图准确率 / 槽位 F1 / 引用精确率 | **未测**（M-Q 需 50 例 holdout 与真实模型，当前为规则式基线） |
 | 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
-| MySQL 真机 | DDL 已提供，本机未连 MySQL 验证生成列/唯一索引 |
+| MySQL 真机 | 已在本机 MySQL 8.0.30 验证生成列、唯一索引与 `ON DUPLICATE KEY UPDATE`；未做多实例并发压测 |
 | 延迟 / 成本 | 未采样 |
 
 不写"准确率 95%"这种没有出处的数字。
