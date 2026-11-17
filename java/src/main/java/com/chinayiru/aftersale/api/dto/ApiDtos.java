@@ -157,7 +157,8 @@ public final class ApiDtos {
     public record TicketStateResponse(String ticketId, String state, int version) {
     }
 
-    public record SendResult(String state, boolean edited, int editDistance, int draftVersion) {
+    public record SendResult(String state, boolean edited, int editDistance,
+                             int draftVersion, int version) {
     }
 
     // ---------- 内部工具 ----------

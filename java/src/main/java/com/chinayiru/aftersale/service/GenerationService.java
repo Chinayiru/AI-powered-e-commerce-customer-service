@@ -222,11 +222,14 @@ public class GenerationService {
             ticket = ticketMapper.findById(ticket.getTicketId());
         }
         boolean needsOrder = needsOrder(ticket.getCategory(), response.intent());
+        // 计时必须包住真实的工具调用：之前的 start 取在 findOwned 之后，
+        // 写进 tool_call 的 latencyMs 恒为 0，是假指标。
+        long toolStart = System.nanoTime();
         Optional<Order> maybeOrder = candidate == null
                 ? Optional.empty()
                 : orderTools.findOwned(ticket.getUserId(), candidate);
         if (candidate != null) {
-            recordToolCall(ticket.getTicketId(), response.intent(), candidate, maybeOrder, traceId);
+            recordToolCall(ticket.getTicketId(), response.intent(), candidate, maybeOrder, toolStart, traceId);
         }
         // 已明确给出订单号但查无此单：首次提示核对，第二次无论意图如何都按 ORDER_NOT_FOUND 转人工。
         if (candidate != null && maybeOrder.isEmpty() && ticket.getStalledRounds() > 0) {
@@ -406,8 +409,7 @@ public class GenerationService {
     }
 
     private void recordToolCall(String ticketId, IntentType intent, String orderNo,
-                                Optional<Order> order, String traceId) {
-        long start = System.nanoTime();
+                                Optional<Order> order, long startNanos, String traceId) {
         ToolCall call = new ToolCall();
         call.setTicketId(ticketId);
         call.setStep(toolCallMapper.nextStep(ticketId));
@@ -417,7 +419,7 @@ public class GenerationService {
             call.setName("queryOrder");
             call.setOk(false);
             call.setErrorCode("ORDER_NOT_FOUND");
-            call.setLatencyMs((int) ((System.nanoTime() - start) / 1_000_000));
+            call.setLatencyMs(elapsedMs(startNanos));
             call.setSummary("未查询到订单 " + orderNo);
             toolCallMapper.insert(call);
             return;
@@ -425,7 +427,6 @@ public class GenerationService {
         Order value = order.get();
         call.setName(intent == IntentType.LOGISTICS ? "getLogistics" : "queryOrder");
         call.setOk(true);
-        call.setLatencyMs((int) ((System.nanoTime() - start) / 1_000_000));
         call.setResponseHash(Hashing.shortHash(json.write(value)));
         if (intent == IntentType.LOGISTICS) {
             Shipment shipment = orderTools.shipmentFor(value.userId(), orderNo);
@@ -438,7 +439,20 @@ public class GenerationService {
             call.setSummary("订单 " + orderNo + " 状态 " + value.status()
                     + "，可退 " + value.refundableAmountCents() + " 分");
         }
+        // 物流分支里还有一次 shipmentFor，耗时统计放在最后取，含两次工具调用。
+        call.setLatencyMs(elapsedMs(startNanos));
         toolCallMapper.insert(call);
+    }
+
+    private static int elapsedMs(long startNanos) {
+        long micros = (System.nanoTime() - startNanos) / 1_000L;
+        if (micros < 0) {
+            return 0;
+        }
+        // 保留亚毫秒精度：一次内存查表往往不到 1ms，直接取整数毫秒会全是 0，
+        // 所以这里向上取整到 1ms，避免"指标全零"再次掩盖真实耗时。
+        long millis = (micros + 999L) / 1_000L;
+        return (int) Math.min(Integer.MAX_VALUE, millis);
     }
 
     private void addAgentMessage(String ticketId, String text) {

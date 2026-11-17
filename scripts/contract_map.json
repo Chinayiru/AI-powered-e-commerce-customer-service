@@ -1,0 +1,74 @@
+{
+  "files": {
+    "boundary": "docs/BOUNDARY_v1.md",
+    "openapi": "docs/api/openapi.yaml",
+    "data_dictionary": "docs/DATA_DICTIONARY.md",
+    "test_plan": "docs/TEST_PLAN.md",
+    "snapshot": "docs/contract-snapshot.json"
+  },
+  "enums": [
+    {
+      "name": "error_codes",
+      "openapi_path": "Error.code",
+      "md": {
+        "file": "boundary",
+        "heading": "### 8.5 错误码",
+        "row_regex": "^\\| `([A-Z_]+)` \\| ([0-9]{3}) \\|",
+        "min_rows": 17
+      }
+    },
+    {
+      "name": "transfer_reasons",
+      "openapi_path": "TransferReason",
+      "md": {
+        "file": "boundary",
+        "heading": "### 8.6 转人工原因",
+        "inline_code_paragraph": true,
+        "min_codes": 9
+      }
+    },
+    {
+      "name": "ticket_states",
+      "openapi_path": "TicketStateCode",
+      "md": {
+        "file": "data_dictionary",
+        "fenced_after": "状态全集",
+        "min_codes": 11
+      }
+    }
+  ],
+  "ac_prefixes": ["AC"],
+  "qc_prefixes": ["QC"],
+  "boundary_acceptance": {
+    "file": "boundary",
+    "ac_heading": "### 15.1",
+    "qc_heading": "### 15.2",
+    "row_regex": "^\\| (AC[0-9]{2}|QC[0-9]{2}) \\| ([^|]+) \\|"
+  },
+  "test_plan_acceptance": {
+    "file": "test_plan",
+    "row_regex": "^\\| (AC[0-9]{2}[a-z]?) \\| ([^|]+) \\|"
+  },
+  "required_fields": [
+    {
+      "schema": "SendRequest",
+      "source": { "file": "boundary", "heading": "### 8.2 坐席", "line_contains": "/send` |" }
+    },
+    {
+      "schema": "AskRequest",
+      "source": { "file": "boundary", "heading": "### 8.3 Java → Python", "line_contains": "POST /internal/agent/ask" },
+      "optional_in_contract": ["context"]
+    }
+  ],
+  "response_coverage": [
+    { "path": "/api/tickets", "method": "post", "codes": ["201", "401", "403", "409", "422"] },
+    { "path": "/api/tickets/{ticketId}", "method": "get", "codes": ["200", "403", "404"] },
+    { "path": "/api/agent/tickets/{ticketId}/send", "method": "post", "codes": ["200", "202", "409", "422", "500"] }
+  ],
+  "snapshot_keys": {
+    "boundary_version": "boundary.version",
+    "openapi_version": "openapi.version",
+    "boundary_sha256": "boundary.sha256",
+    "openapi_sha256": "openapi.sha256"
+  }
+}

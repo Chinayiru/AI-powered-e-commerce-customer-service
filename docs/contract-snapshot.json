@@ -9,8 +9,8 @@
   },
   "openapi": {
     "file": "docs/api/openapi.yaml",
-    "version": "1.5.1",
-    "sha256": "6ff8ca754f957609e264505589d0f2ab9c1686821905dd3e602ebfb7c22cf9b6"
+    "version": "1.5.2",
+    "sha256": "cb24b240dfef94d36f7936e6157959769fd594d4ca7df9f791942e67e3358d64"
   },
   "changed_in_this_snapshot": [
     "AC22 越权订单改为 404 ORDER_NOT_FOUND（403 只留给 ticketToken 不匹配）",
@@ -18,7 +18,8 @@
     "TOOL_FAILED 明确包含 AI 服务故障，靠 AGENT_UNAVAILABLE 与组件日志区分",
     "投诉关键词归 OUT_OF_SCOPE，USER_REQUESTED 只给明确要求人工",
     "OpenAPI 消费者查询描述由「五态」改为「六态」",
-    "契约版本改为独立演进，由本快照记录对应关系"
+    "契约版本改为独立演进，由本快照记录对应关系",
+    "SendResult 补必返 version；建单即转售后时 201 返回新售后单凭据（AC20）"
   ],
   "open_issues": [
     "T3 仍收 draftVersion，与「保存成功后分配」冲突（R7）",

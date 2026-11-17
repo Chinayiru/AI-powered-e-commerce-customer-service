@@ -1,0 +1,39 @@
+Access is denied.
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective settings
+[WARNING] Unrecognised tag: 'mirrors' (position: START_TAG seen ...<!--    \u7b2c\u4e00\u79cd\u955c\u50cf-->\r\n    <mirrors>... @161:14)  @ E:\Development tool\apache-maven\bin\..\conf\settings.xml, line 161, column 14
+[WARNING] 
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.chinayiru:aftersale-agent-java >-----------------
+[INFO] Building aftersale-agent-java 0.1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ aftersale-agent-java ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:compile (default-compile) @ aftersale-agent-java ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ aftersale-agent-java ---
+[INFO] skip non existing resourceDirectory C:\Users\18240\Documents\ChatGPT\���̹���\���ܲ���_2026-11-17_111501\java\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ aftersale-agent-java ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.2.5:test (default-test) @ aftersale-agent-java ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- maven-jar-plugin:3.4.2:jar (default-jar) @ aftersale-agent-java ---
+[INFO] Building jar: C:\Users\18240\Documents\ChatGPT\���̹���\���ܲ���_2026-11-17_111501\java\target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot-maven-plugin:3.3.5:repackage (repackage) @ aftersale-agent-java ---
+[INFO] Replacing main artifact C:\Users\18240\Documents\ChatGPT\���̹���\���ܲ���_2026-11-17_111501\java\target\aftersale-agent-java-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to C:\Users\18240\Documents\ChatGPT\���̹���\���ܲ���_2026-11-17_111501\java\target\aftersale-agent-java-0.1.0-SNAPSHOT.jar.original
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.870 s
+[INFO] Finished at: 2026-11-17T11:38:23+08:00
+[INFO] ------------------------------------------------------------------------

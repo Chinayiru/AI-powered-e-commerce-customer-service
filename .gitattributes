@@ -1,0 +1,2 @@
+# Preserve archived evidence bytes, including original line endings.
+/测试复跑证据_2026-11-17_111501/** -text -whitespace

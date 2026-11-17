@@ -1,0 +1,30 @@
+PASS  java health  status=200
+PASS  python health  status=200
+PASS  python ask 直连  status=200 intent=REFUND_REQUEST conf=0.92 action=REFUND citations=1
+PASS  python 不收 policyCheck  keys=['citations', 'confidence', 'degraded', 'intent', 'model', 'needHumanReview', 'replyDraft', 'replyType', 'slots', 'suggestedAction', 'transferReason']
+PASS  python 缺身份头 401  status=401 code=UNAUTHENTICATED
+PASS  建单 AFTERSALE  status=201 state=处理中 version=3 mode=SIMULATED
+PASS  坐席视图（含 AI 产出）  status=200 intent=REFUND_REQUEST conf=0.92 needReview=True action=REFUND
+PASS  AI 引用与 policyCheck 落库  citations=['3.1'] policy.allowed=True maxRefund=5800
+PASS  工具调用延迟非零  toolCalls=[('queryOrder', 4, True)]
+PASS  消费者视图白名单  status=200 keys=['displayState', 'messages', 'ticketId', 'updatedAt', 'version']
+PASS  send 批准并执行  status=200 state=CLOSED version=6 edited=False editDistance=0
+PASS  send 幂等重放  status=200 same_body=True
+PASS  消费者看到关闭与坐席回复  state=已完成 reply=退款申请已受理（演示环境，未真实退款）。 agentMsgs=2
+PASS  咨询单直接回复（无需坐席）  state=已回复 reply=订单 O1002 物流运输中：SF1002（运输中）。最新：到达分拨中心。
+PASS  低置信自动转人工  state=TRANSFERRED reason=LOW_CONFIDENCE
+PASS  坐席回复已转人工工单  status=200 state=REPLIED
+PASS  关闭工单  status=200 state=CLOSED
+PASS  消费者看到人工回复  state=已完成 reply=您好，营收数据不在售后服务范围内，已为您记录诉求。
+PASS  咨询转售后：返回新售后单凭据  status=201 category=AFTERSALE newTicket=T20261117000005 view=处理中
+PASS  咨询追问退款：messages 回传 createdTicket  status=200 created=T20261117000007 state=处理中
+PASS  缺坐席凭证 401  status=401 code=UNAUTHENTICATED
+PASS  他人 ticketToken 越权 403  status=403 code=FORBIDDEN_SCOPE
+PASS  已关闭工单再发消息 409  status=409 code=STATE_NOT_ALLOWED
+PASS  缺 requestId 422  status=422 code=INVALID_ARGS
+PASS  非本人/不存在订单 404  status=404 code=ORDER_NOT_FOUND
+PASS  我的订单列表  status=200 count=11
+
+========================================================================
+共 26 项检查，通过 26，失败 0
+========================================================================
