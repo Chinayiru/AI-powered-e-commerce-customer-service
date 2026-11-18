@@ -17,3 +17,11 @@ spring:
 logging:
   level:
     com.chinayiru.aftersale: INFO
+
+app:
+  demo:
+    allow-header-identity: true
+  security:
+    # 仅本地 dev 的演示密钥；生产/联调 profile 不允许回落到这两个值。
+    hmac-secret: ${APP_HMAC_SECRET:dev-only-hmac-secret-change-me-please}
+    agent-token: ${APP_AGENT_TOKEN:demo-agent-token}

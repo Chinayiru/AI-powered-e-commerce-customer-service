@@ -73,7 +73,7 @@ $env:JAVA_HOME="$env:USERPROFILE\.jdks\corretto-17.0.9"
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 cd java
-mvn -B test                 # 26 个 H2 集成与回归测试
+mvn -B test                 # 39 个 H2 集成与安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -81,9 +81,12 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # 另开终端：Python AI 层
 cd python
 pip install -r requirements.txt
-python -m pytest -q         # 21 个 pytest
+python -m pytest -q         # 26 个 pytest
+$env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+> 密钥边界：`dev` / `test` 才允许使用仓库内置演示密钥；`mysql` / `prod` 等其余 profile 启动时必须注入独立的 `APP_HMAC_SECRET` 与 `APP_AGENT_TOKEN`（各至少 32 字符、不得含 `dev-only` / `change-me` 等示例标记），否则 `StartupGuard` 直接拒绝启动。Python 侧 `AFTERSALE_HMAC_SECRET` 没有默认值，缺失或短于 32 字符同样拒绝启动，且必须与 Java 的 `app.security.hmac-secret` 一致。
 
 联调时 Java 加 `--app.agent.mode=http`，并保证两端 `hmac-secret` 一致。本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL 8.0.30 已在本机验证：库 `aftersale`、应用账号 `aftersale`，`schema-mysql.sql` 可直接初始化；dev 默认仍用 H2。完整接口冒烟见 `java/README.md`，Python 规则与联调见 `python/README.md`。
 
@@ -97,8 +100,13 @@ GRANT ALL PRIVILEGES ON aftersale.* TO 'aftersale'@'localhost';
 ```
 
 ```powershell
+# mysql 不是演示 profile：必须注入两把独立、>=32 字符的密钥
+$env:APP_HMAC_SECRET = "<至少 32 字符的随机 HMAC 密钥>"
+$env:APP_AGENT_TOKEN = "<至少 32 字符的随机坐席令牌>"
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.active=mysql
 ```
+
+> `mysql` profile 关闭了 `X-User-Id` 自报身份，仓库当前也未接入真实 SSO，因此它只适合验证 DDL、内部工具和坐席接口；消费者建单/对话链路请用默认 `dev`（H2）。
 
 ---
 
@@ -106,8 +114,8 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 
 | 指标 | 状态 |
 | --- | --- |
-| Java M-S 集成测试 | 26/26 通过（H2），含执行失败重试与咨询转售后回归；未做线程级并发压测 |
-| Python AI 单元测试 | 21/21 通过（规则式桩，FakeTools）；未接真实 LLM |
+| Java M-S 集成测试 | 39/39 通过（H2），含启动密钥红线、内部身份越权/重放、执行失败重试与咨询转售后回归；未做线程级并发压测 |
+| Python AI 单元测试 | 26/26 通过（规则式桩，FakeTools），含身份 userId 一致性、角色边界与缺失密钥启动失败；未接真实 LLM |
 | 意图准确率 / 槽位 F1 / 引用精确率 | 2026-11-17 holdout：意图准确率 75%（门槛 85%，未达标）、订单号召回 100%；草稿可用率待双评 |
 | 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
 | MySQL 真机 | 已在本机 MySQL 8.0.30 验证生成列、唯一索引与 `ON DUPLICATE KEY UPDATE`；未做多实例并发压测 |

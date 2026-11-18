@@ -18,7 +18,7 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 ```powershell
 cd H:\电商工单ai\java
-mvn -B test                 # 19 个 H2 集成测试
+mvn -B test                 # 39 个 H2 集成与安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -32,8 +32,17 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 | --- | --- |
 | `dev`（默认） | H2 内存库、MySQL 兼容模、H2 Console `/h2-console` |
 | `test` | 独立 H2 内存库，集成测试使用 |
-| `mysql` | 读 `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD`，执行 `db/schema-mysql.sql` |
+| `mysql` | 读 `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD`，执行 `db/schema-mysql.sql`；必须额外注入 `APP_HMAC_SECRET` / `APP_AGENT_TOKEN`，且关闭了自报身份 |
 | `prod` | 关闭演示头身份，要求 SSO/真实密钥，启动自检失败即拒绝启动 |
+
+> 密钥红线：只有“全部激活 profile 都是 `dev` / `test`”时才允许使用仓库内置演示密钥。`mysql`、`prod`、以及 `dev,prod` 这类混合 profile 必须在启动前注入两把独立凭证：
+>
+> ```powershell
+> $env:APP_HMAC_SECRET = "<至少 32 字符的随机 HMAC 密钥>"
+> $env:APP_AGENT_TOKEN = "<至少 32 字符的随机坐席令牌>"
+> ```
+>
+> 两把值不得相同，也不得包含 `dev-only`、`change-me`、`demo-agent-token`、`please`、`example` 等示例标记；否则 `StartupGuard` 在端口开始服务前抛错。`dev` / `test` 的演示值只用于本机联调。
 
 ## 2. 5 分钟冒烟
 
@@ -148,7 +157,7 @@ java/
 mvn -B test
 ```
 
-`ApiIntegrationTest` 当前 **19/19 通过**，覆盖：
+`ApiIntegrationTest` 当前 **22/22 通过**，`StartupGuardTest` **10/10 通过**，合计 **39/39**。覆盖：
 
 - 消费者响应白名单（无 `state/intent/confidence` 等）；
 - 同 `requestId` 重放、异体冲突；
@@ -161,7 +170,9 @@ mvn -B test
 - ticketToken 作用域/缺失 403/401；
 - 未知字段忽略、编辑距离服务端计算；
 - `X-Trace-Id` 落入审计；
-- 内部工具身份、nonce 重放、越权 404；
+- 内部工具身份、nonce 重放、跨端点重放、agent 角色越权 403、越权 404；
+- 空坐席令牌 401；
+- 启动红线：非 dev/test 的示例串/短密钥/自报身份/共用密钥均拒绝，`dev,prod` 混合 profile 不得绕过，prod 必须 SSO + http；
 - `handoff → reply → close` 与 `send` 幂等后消费者看到 `CLOSED`。
 
 未覆盖/未验证：真实并发竞争（AC03/AC12/AC15 的线程级竞争）、执行失败 202 分支（模拟执行恒成功）、Python 真实模型效果（M-Q）。

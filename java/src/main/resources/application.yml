@@ -37,14 +37,17 @@ springdoc:
 
 app:
   demo:
-    # 演示身份头只在 dev/test 打开；prod 必须为 false。
-    allow-header-identity: true
+    # 默认关闭自报身份；只有 application-dev.yml / application-test.yml 显式打开。
+    allow-header-identity: false
     allowed-user-ids:
       - U001
       - U002
   security:
-    hmac-secret: ${APP_HMAC_SECRET:dev-only-hmac-secret-change-me-please}
-    agent-token: ${APP_AGENT_TOKEN:demo-agent-token}
+    # 基础配置不提供可用默认密钥；dev/test 的演示值只在对应 profile 中定义。
+    # 其余 profile（含 mysql/prod）启动前必须注入 >=32 字符的 APP_HMAC_SECRET /
+    # APP_AGENT_TOKEN，否则 StartupGuard 直接拒绝启动。
+    hmac-secret: ${APP_HMAC_SECRET:}
+    agent-token: ${APP_AGENT_TOKEN:}
     ticket-token-ttl-hours: 168
     internal-identity-ttl-seconds: 300
     nonce-cache-seconds: 300

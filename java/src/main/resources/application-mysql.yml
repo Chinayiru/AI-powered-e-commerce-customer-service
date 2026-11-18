@@ -14,3 +14,5 @@ spring:
 app:
   demo:
     allow-header-identity: false
+  # mysql 不是 dev/test 白名单 profile：启动前必须注入
+  # APP_HMAC_SECRET / APP_AGENT_TOKEN（均 >=32 字符），否则 StartupGuard 拒绝启动。

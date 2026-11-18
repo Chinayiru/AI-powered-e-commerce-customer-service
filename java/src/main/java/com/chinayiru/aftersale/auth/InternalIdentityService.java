@@ -18,8 +18,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 内部身份 X-Internal-Identity = base64url(JSON{userId,role,exp,nonce}) + "." + HMAC。
- * nonce 以 (nonce,userId,role,path) 去重：一次 ask 可以合法地调多个工具，
- * 但同一个工具不能被同一 nonce 重放。README 记录了这一取舍。
+ *
+ * <p>nonce 以 (nonce,userId,role) 全局去重，而不是按 path 去重：一次调用只能
+ * 使用一次身份串，跨端点重放同样返回 401。Python 每发一个工具请求都会重新
+ * 签发身份，因此不影响一次 ask 查询订单 + 物流的合法链路。</p>
  */
 @Service
 public class InternalIdentityService {
@@ -45,6 +47,12 @@ public class InternalIdentityService {
     }
 
     public String issue(String userId, String role) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("内部身份 userId 不能为空");
+        }
+        if (!ALLOWED_ROLES.contains(role)) {
+            throw new IllegalArgumentException("不支持内部角色: " + role);
+        }
         long exp = Instant.now()
                 .plus(Duration.ofSeconds(properties.getSecurity().getInternalIdentityTtlSeconds()))
                 .getEpochSecond();
@@ -75,15 +83,21 @@ public class InternalIdentityService {
         }
         try {
             Map<String, Object> payload = mapper.readValue(hmac.decode(parts[0]), MAP_TYPE);
-            String userId = String.valueOf(payload.get("userId"));
-            String role = String.valueOf(payload.get("role"));
-            String nonce = String.valueOf(payload.get("nonce"));
-            long exp = ((Number) payload.get("exp")).longValue();
-            if (userId.isBlank() || "null".equals(userId) || !ALLOWED_ROLES.contains(role)
-                    || "null".equals(nonce) || exp < Instant.now().getEpochSecond()) {
+            Object userIdValue = payload.get("userId");
+            Object roleValue = payload.get("role");
+            Object nonceValue = payload.get("nonce");
+            Object expValue = payload.get("exp");
+            if (!(userIdValue instanceof String userId) || !(roleValue instanceof String role)
+                    || !(nonceValue instanceof String nonce) || !(expValue instanceof Number expNumber)) {
+                throw new ApiException(ErrorCode.UNAUTHENTICATED, "内部身份内容不合法");
+            }
+            long exp = expNumber.longValue();
+            if (userId.isBlank() || !ALLOWED_ROLES.contains(role)
+                    || nonce.isBlank() || exp < Instant.now().getEpochSecond()) {
                 throw new ApiException(ErrorCode.UNAUTHENTICATED, "内部身份无效或已过期");
             }
-            rememberNonce(nonce + "|" + userId + "|" + role + "|" + path, exp);
+            // path 参数保留用于接口兼容；nonce 全局唯一，不能靠换端点绕过重放保护。
+            rememberNonce(nonce + "|" + userId + "|" + role, exp);
             return new Identity(userId, role);
         } catch (ApiException ex) {
             throw ex;

@@ -13,6 +13,10 @@ spring:
 app:
   demo:
     allow-header-identity: true
+  security:
+    # 测试 profile 与 dev 使用同一组演示密钥，仅用于 H2 集成测试。
+    hmac-secret: ${APP_HMAC_SECRET:dev-only-hmac-secret-change-me-please}
+    agent-token: ${APP_AGENT_TOKEN:demo-agent-token}
   agent:
     mode: scripted
   execution:

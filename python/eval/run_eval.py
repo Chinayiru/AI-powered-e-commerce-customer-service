@@ -112,7 +112,7 @@ class DemoFakeTools:
 def make_settings() -> Settings:
     return Settings(
         java_base_url="http://localhost:8080",
-        hmac_secret="eval-secret",
+        hmac_secret="eval-secret-0123456789abcdef0123456789",
         tool_timeout_seconds=1.0,
         tool_retries=1,
         confidence_threshold=0.60,

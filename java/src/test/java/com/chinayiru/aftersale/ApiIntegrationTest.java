@@ -320,6 +320,38 @@ class ApiIntegrationTest {
     }
 
     @Test
+    void internalIdentityCannotBeReplayedAcrossEndpoints() throws Exception {
+        String identity = internalIdentity.issue("U001", "python");
+
+        MvcResult first = postJson("/internal/tools/queryOrder", Map.of("orderNo", "O1001"),
+                "X-Internal-Identity", identity);
+        assertThat(first.getResponse().getStatus()).isEqualTo(200);
+
+        // nonce 不再按 path 分桶同一身份换一个工具端点也必须被拒绝。
+        MvcResult crossEndpoint = postJson("/internal/tools/getLogistics", Map.of("orderNo", "O1002"),
+                "X-Internal-Identity", identity);
+        assertThat(crossEndpoint.getResponse().getStatus()).isEqualTo(401);
+    }
+
+    @Test
+    void agentRoleCannotCallInternalTools() throws Exception {
+        String identity = internalIdentity.issue("U001", "agent");
+
+        MvcResult result = postJson("/internal/tools/queryOrder", Map.of("orderNo", "O1001"),
+                "X-Internal-Identity", identity);
+        assertThat(result.getResponse().getStatus()).isEqualTo(403);
+        assertThat(json(result).path("code").asText()).isEqualTo("FORBIDDEN_SCOPE");
+    }
+
+    @Test
+    void blankAgentTokenIsRejected() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/agent/tickets/anything")
+                .header("X-Agent-Token", "")).andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(401);
+        assertThat(json(result).path("code").asText()).isEqualTo("UNAUTHENTICATED");
+    }
+
+    @Test
     void handoffReplyAndCloseFlow() throws Exception {
         JsonNode created = createTicket("AFTERSALE", "我要退款", "O1001", "U001");
         String ticketId = created.path("ticketId").asText();

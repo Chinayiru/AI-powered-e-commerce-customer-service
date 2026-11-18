@@ -63,7 +63,12 @@ def issue_identity(user_id: str, role: str, secret: str, ttl_seconds: int = 300)
 
 
 class NonceCache:
-    """Small in-process replay cache keyed by nonce + identity + path."""
+    """Small in-process replay cache keyed by nonce + identity.
+
+    The key deliberately excludes the request path: one identity is valid for
+    exactly one call, so a token captured on queryOrder cannot be replayed on
+    getLogistics (or vice versa).
+    """
 
     def __init__(self) -> None:
         self._seen: dict[str, int] = {}
@@ -107,5 +112,7 @@ def verify_identity(
         raise IdentityError("invalid internal identity payload") from exc
     if not user_id or role not in _ALLOWED_ROLES or not nonce or exp < int(time.time()):
         raise IdentityError("expired or incomplete internal identity")
-    (nonces or _DEFAULT_NONCES).remember(f"{nonce}|{user_id}|{role}|{path}", exp)
+    # path 参数仅为接口兼容保留；nonce 必须全局唯一，不能跨端点重放。
+    _ = path
+    (nonces or _DEFAULT_NONCES).remember(f"{nonce}|{user_id}|{role}", exp)
     return Identity(userId=user_id, role=role, exp=exp, nonce=nonce)

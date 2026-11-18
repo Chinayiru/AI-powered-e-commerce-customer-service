@@ -77,10 +77,13 @@ public class TicketTokenService {
             Object ticketId = payload.get("ticketId");
             Object userId = payload.get("userId");
             Object exp = payload.get("exp");
-            if (!(ticketId instanceof String) || !(userId instanceof String) || !(exp instanceof Number)) {
+            if (!(ticketId instanceof String t) || !(userId instanceof String u)
+                    || !(exp instanceof Number e)
+                    || t.isBlank() || u.isBlank() || e.longValue() <= 0) {
                 throw new ApiException(ErrorCode.UNAUTHENTICATED, "登录凭证内容不合法");
             }
-            return new Claims((String) ticketId, (String) userId, ((Number) exp).longValue());
+            // 只接受签发给当前工单的 token；userId 非空，后续由 TicketService 再做归属校验。
+            return new Claims(t, u, e.longValue());
         } catch (ApiException ex) {
             throw ex;
         } catch (Exception ex) {

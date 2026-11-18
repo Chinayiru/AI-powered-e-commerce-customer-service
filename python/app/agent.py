@@ -48,7 +48,9 @@ class AgentService:
         self.settings = settings
         self.tools = tools
 
-    def answer(self, request: AskRequest) -> AskResponse:
+    def answer(self, request: AskRequest, *, user_id: str | None = None) -> AskResponse:
+        # user_id 来自验签后的内部身份；只有离线评测才回退到请求体字段。
+        actor_user_id = user_id or request.userId
         result = classify(request.message)
         context_order = request.context.orderNo if request.context else None
         history = request.context.history if request.context else []
@@ -113,7 +115,7 @@ class AgentService:
         order: dict[str, Any] | None = None
         if needs_order and order_no:
             try:
-                order = self.tools.query_order(request.userId, order_no)
+                order = self.tools.query_order(actor_user_id, order_no)
             except ToolUnavailable as exc:
                 return self._handoff(
                     Intent.HANDOFF,
@@ -129,7 +131,7 @@ class AgentService:
         shipment: dict[str, Any] | None = None
         if result.intent == Intent.LOGISTICS and order is not None:
             try:
-                shipment = self.tools.get_logistics(request.userId, order_no)
+                shipment = self.tools.get_logistics(actor_user_id, order_no)
             except ToolUnavailable:
                 return self._handoff(
                     Intent.HANDOFF,
