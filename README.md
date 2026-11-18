@@ -125,7 +125,7 @@ python -m app.cli run --fixture tb_1001 --provider auto   # 同 openai_compat：
 ## 测试
 
 ```powershell
-python -m pytest -q                      # 契约 + 验收 + API + provider，共 79 条（全离线）
+python -m pytest -q                      # 契约 + 验收 + API + provider，共 89 条（全离线）
 python -m pytest tests/acceptance -q     # AC01–AC26
 python -m pytest tests/test_api.py -q    # 前端依赖的 HTTP 契约
 python -m pytest tests/test_llm_openai_compat.py -q   # 真实 provider 的离线契约（假 transport）
