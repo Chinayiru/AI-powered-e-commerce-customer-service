@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from app.contracts.models import (
+    AftersalesType,
     OrderStatus,
     PolicyDecision,
     ReasonCode,
@@ -25,19 +26,27 @@ from app.contracts.models import (
 
 ELIGIBLE_STATUSES = frozenset({OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED})
 
-# 只想影响 send_gate、不影响 verdict 的原因码
-GATE_ONLY = frozenset(
+# 只收紧闸门、**保留**原 verdict 的原因码（CONTRACT §6.3 的 P6/P7/P12）
+VERDICT_NEUTRAL = frozenset(
     {
         ReasonCode.AMOUNT_OVER_LIMIT,
         ReasonCode.POLICY_GRAY_BAND,
-        ReasonCode.MISSING_EVIDENCE,
-        ReasonCode.HUMAN_REQUESTED,
-        ReasonCode.MODEL_LOW_CONFIDENCE,
         ReasonCode.MODEL_NEEDS_HUMAN,
     }
 )
 
-# primary_reason 的优先级：越小越优先，用来回答"这条工单到底卡在哪"
+# 契约写死 verdict=undecided 的原因码（P8/P10/P11）：事实不清或人不让发，
+# 就不许给出 approve/partial——拒绝文案也是对外承诺，何况还有打款动作。
+UNDECIDED_ONLY = frozenset(
+    {
+        ReasonCode.MISSING_EVIDENCE,
+        ReasonCode.HUMAN_REQUESTED,
+        ReasonCode.MODEL_LOW_CONFIDENCE,
+    }
+)
+
+# primary_reason 的优先级：越小越优先，用来回答"这条工单到底卡在哪"。
+# 顺序必须与 CONTRACT §6.3 的 P0–P12 一一对应，否则 primary 会挑到表外的东西。
 PRIORITY = [
     ReasonCode.NOT_A_REFUND,
     ReasonCode.PLATFORM_ANOMALY,
@@ -45,13 +54,20 @@ PRIORITY = [
     ReasonCode.THREAT_OR_LEGAL,
     ReasonCode.CATEGORY_EXCLUDED,
     ReasonCode.OUT_OF_WINDOW,
+    ReasonCode.AMOUNT_OVER_PAID,
     ReasonCode.AMOUNT_OVER_LIMIT,
     ReasonCode.POLICY_GRAY_BAND,
     ReasonCode.MISSING_EVIDENCE,
     ReasonCode.PARTIAL_OVER_RATIO,
     ReasonCode.HUMAN_REQUESTED,
     ReasonCode.MODEL_LOW_CONFIDENCE,
+    ReasonCode.MODEL_NEEDS_HUMAN,
 ]
+
+
+def primary_of(codes: list[ReasonCode] | tuple[ReasonCode, ...]) -> ReasonCode:
+    """按契约优先级挑 primary；表里没有的码不许当 primary（否则排序不可解释）。"""
+    return next((c for c in PRIORITY if c in codes), ReasonCode.OK)
 
 
 def evaluate(signals: Signals, policy: RefundPolicy) -> PolicyDecision:
@@ -75,7 +91,9 @@ def evaluate(signals: Signals, policy: RefundPolicy) -> PolicyDecision:
     elif signals.amount_cents > rule.auto_limit_cents:
         hit(ReasonCode.POLICY_GRAY_BAND)
 
-    if not signals.evidence_provided:
+    # P8 缺凭证：只对"仅退款"生效。退货退款此时买家还没寄回，凭证在寄回验收环节看（AC10），
+    # 否则所有退货退款都会永远停在 undecided，退货流程根本走不到 AWAITING_BUYER_SHIP。
+    if not signals.evidence_provided and signals.aftersales_type is not AftersalesType.return_refund:
         hit(ReasonCode.MISSING_EVIDENCE)
     if signals.user_requested_human:
         hit(ReasonCode.HUMAN_REQUESTED)
@@ -87,8 +105,12 @@ def evaluate(signals: Signals, policy: RefundPolicy) -> PolicyDecision:
         verdict, approved = Verdict.undecided, None
     else:
         verdict, approved = _business_verdict(signals, policy, rule, hit)
+        # P8/P10/P11：缺凭证 / 用户要人工 / 模型低置信 → 契约要求 undecided。
+        # 只在业务结论是"可退"（approve/partial）时降级：reject 由更早的 P2/P4/P5 决定，优先级更高。
+        if verdict in (Verdict.approve, Verdict.partial) and any(c in UNDECIDED_ONLY for c in hits):
+            verdict, approved = Verdict.undecided, None
 
-    primary = next((c for c in PRIORITY if c in hits), ReasonCode.OK)
+    primary = primary_of(hits)
     send_gate = SendGate.auto if not hits else SendGate.human
 
     return PolicyDecision(
@@ -135,7 +157,7 @@ def _business_verdict(
         return Verdict.reject, None
 
     if signals.amount_cents > signals.paid_cents:
-        hit(ReasonCode.PARTIAL_OVER_RATIO)
+        hit(ReasonCode.AMOUNT_OVER_PAID)
         return Verdict.reject, None
 
     if signals.has_threat:
@@ -144,8 +166,9 @@ def _business_verdict(
     if signals.paid_cents > 0 and signals.amount_cents < signals.paid_cents:
         ratio = signals.amount_cents / signals.paid_cents
         if ratio > policy.max_partial_ratio:
+            # P9：请求比例超上限只批到上限（partial），仍需人工确认；不是整单拒绝
             hit(ReasonCode.PARTIAL_OVER_RATIO)
-            return Verdict.undecided, None
+            return Verdict.partial, int(signals.paid_cents * policy.max_partial_ratio)
         return Verdict.partial, signals.amount_cents
 
     return Verdict.approve, signals.amount_cents

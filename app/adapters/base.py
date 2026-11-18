@@ -179,15 +179,15 @@ class FixtureAdapter:
                 case_id=str(c["aftersales_id"]),
                 ticket_id="",
                 order_ref=order_ref,
-                type=AftersalesType(c.get("type", "refund_only")),
+                type=_enum(AftersalesType, c.get("type", "refund_only"), "cases.type"),
                 requested_cents=to_cents(c.get("amount"), "yuan" if self.platform == "douyin" else "cent"),
-                status=CaseStatus(c.get("status", "INITIATED")),
+                status=_enum(CaseStatus, c.get("status", "INITIATED"), "cases.status"),
             )
             for ev in sorted(c.get("events", []), key=lambda e: str(e.get("at"))):
                 case.append_event(
                     CaseEvent(
                         event_id="",
-                        to_status=CaseStatus(ev.get("to", "INITIATED")),
+                        to_status=_enum(CaseStatus, ev.get("to", "INITIATED"), "cases.events.to"),
                         actor=str(ev.get("actor", "platform")),
                         at=parse_dt(ev.get("at")),
                     ),
@@ -206,3 +206,11 @@ class FixtureAdapter:
 
 def _created_or_raise(raw: dict):
     raise DomainError(ErrorCode.PLATFORM_ANOMALY, f"创建时间缺失: {raw.get('created') or raw.get('create_time')!r}")
+
+
+def _enum(cls, value, field: str):
+    """平台脏值不许直穿成 ValueError（那会变成 500）：统一报 E_PLATFORM_ANOMALY。"""
+    try:
+        return cls(value)
+    except ValueError as exc:
+        raise DomainError(ErrorCode.PLATFORM_ANOMALY, f"平台脏值 {field}={value!r}") from exc

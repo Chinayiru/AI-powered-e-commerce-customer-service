@@ -160,7 +160,31 @@ def test_missing_signed_at_is_anomaly_not_guess():
 
 def test_partial_cannot_exceed_paid():
     d = evaluate(signals(amount_cents=5000, paid_cents=3000), policy())
-    assert (d.verdict, d.primary_reason) == (Verdict.reject, "R_PARTIAL_OVER_RATIO")
+    # 超过实付 ≠ 超过比例：一码一义（M4），超实付有自己的 R_AMOUNT_OVER_PAID
+    assert (d.verdict, d.primary_reason) == (Verdict.reject, "R_AMOUNT_OVER_PAID")
+
+
+def test_partial_over_ratio_only_pays_the_cap():
+    """P9：请求比例超上限只批到上限，仍走人工；不是整单拒绝，也不是无限额放行。"""
+    d = evaluate(
+        signals(amount_cents=800, paid_cents=1000),
+        policy(max_partial_ratio=0.5),
+    )
+    assert (d.verdict, d.approved_amount_cents) == (Verdict.partial, 500)
+    assert d.primary_reason is ReasonCode.PARTIAL_OVER_RATIO
+    assert d.send_gate is SendGate.human
+
+
+def test_missing_evidence_only_blocks_refund_only():
+    """P8 只对"仅退款"成立：退货退款此刻买家还没寄回，凭证在寄回验收环节看（AC10）。"""
+    refund_only = evaluate(signals(evidence_provided=False, aftersales_type=AftersalesType.refund_only), policy())
+    assert (refund_only.verdict, refund_only.primary_reason) == (Verdict.undecided, "R_MISSING_EVIDENCE")
+
+    return_refund = evaluate(
+        signals(evidence_provided=False, aftersales_type=AftersalesType.return_refund),
+        policy(),
+    )
+    assert ReasonCode.MISSING_EVIDENCE not in return_refund.reason_codes
 
 
 # ---- 契约 §10：错误码封闭集 ----

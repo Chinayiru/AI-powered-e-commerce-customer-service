@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import socket
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -41,7 +42,7 @@ from app.llm.base import Proposal, Provider
 from app.llm.prompts import build_prompt, prompt_version
 from app.llm.scripted import parse_proposal
 from app.policy.drafts import shape_draft
-from app.policy.refund_policy import evaluate
+from app.policy.refund_policy import evaluate, primary_of
 
 THREAT_RE = re.compile(r"12315|曝光|法院|起诉|律师函|投诉到")
 HUMAN_RE = re.compile(r"转人工|人工客服|找人工|真人")
@@ -56,6 +57,17 @@ class RunResult:
 
 def _digest(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:8]
+
+
+def _is_timeout(exc: Exception) -> bool:
+    return bool(getattr(exc, "timeout", False)) or isinstance(exc, (TimeoutError, socket.timeout))
+
+
+def _error_code(exc: Exception) -> str:
+    """失败归类只映射到既有错误码，不新增（AC26）。"""
+    if isinstance(exc, DomainError):
+        return exc.code.value  # 例如 E_SCRIPT_MISS：scripted 没剧本不是"模型输出坏"
+    return ErrorCode.TIMEOUT.value if _is_timeout(exc) else ErrorCode.INVALID_OUTPUT.value
 
 
 class _Traces:
@@ -90,11 +102,16 @@ def run(
     now: datetime,
     confirm: str | None = None,
     kb_quotes: dict[str, str] | None = None,
+    kb_hits: list[str] | None = None,
 ) -> RunResult:
     t_start = time.perf_counter()
     traces = _Traces()
     order_ref = ticket.order_ref or ""
-    approver = confirm.split(":", 1)[1] if confirm and confirm.startswith("human:") else None
+    # confirm 只有两种合法形态：None，或 human:<id>。其它形态（如 confirm="boss"）
+    # 必须显式报 E_CONFIRM_REQUIRED —— 静默不执行会让调用方以为已经退款了。
+    if confirm is not None and not (confirm.startswith("human:") and len(confirm) > len("human:")):
+        raise DomainError(ErrorCode.CONFIRM_REQUIRED, f"confirm 必须是 human:<id>，收到 {confirm!r}")
+    approver = confirm.split(":", 1)[1] if confirm else None
     # run_id 必须在任何分支里都一致：把模型配置也算进去，否则"超时跑"和"正常跑"会同号
     rid = _run_id(ticket, order_ref, prompt_version(), policy.version, confirm, llm)
 
@@ -109,7 +126,7 @@ def run(
 
     # 2) 组 prompt + 事前预算
     pv = prompt_version()
-    prompt = build_prompt(ticket.text, order)
+    prompt = build_prompt(ticket.text, order, kb_hits=kb_hits)
     est_input = max(1, len(prompt) // 4)
     usage = Usage(input_tokens=est_input, output_tokens=0, estimated=True)
     if est_input > llm.token_budget:
@@ -120,10 +137,22 @@ def run(
 
     # 3) 调模型（一次 + 最多一次重试）
     t0 = time.perf_counter()
-    resp = provider.propose(prompt, order_ref)
+    try:
+        resp = provider.propose(prompt, order_ref, timeout_ms=llm.timeout_ms)
+    except Exception as exc:  # noqa: BLE001 - 真实 provider 的网络失败不得穿到调用方
+        traces.add("llm.propose", False, t0, args={"provider": provider.name}, error=_error_code(exc))
+        out = _stop(
+            ticket, traces, t_start, order_ref,
+            StopReason.timeout if _is_timeout(exc) else StopReason.degraded,
+            usage,
+            policy=policy, rid=rid, prompt_version=pv, model=llm.model,
+        )
+        out.out.draft.risk_flags = [_error_code(exc)]
+        return out
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     usage.output_tokens = resp.output_tokens
     usage.input_tokens = max(usage.input_tokens, resp.input_tokens)
+    usage.estimated = resp.estimated
     if elapsed_ms > llm.timeout_ms:
         traces.add("llm.propose", False, t0, args={"provider": provider.name}, error=ErrorCode.TIMEOUT.value)
         return _stop(
@@ -141,8 +170,13 @@ def run(
             if attempt == 1:
                 break
             t0 = time.perf_counter()
-            resp = provider.propose(prompt, order_ref)
+            try:
+                resp = provider.propose(prompt, order_ref, timeout_ms=llm.timeout_ms)
+            except Exception as exc:  # noqa: BLE001 - 重试再失败就按坏输出降级
+                traces.add("llm.propose.retry", False, t0, args={"attempt": 2}, error=_error_code(exc))
+                break
             usage.output_tokens += resp.output_tokens
+            usage.estimated = usage.estimated or resp.estimated
             traces.add("llm.propose.retry", True, t0, args={"attempt": 2})
     if proposal is None:
         out = _stop(
@@ -154,7 +188,17 @@ def run(
 
     # 4) 事实 → 信号 → 策略
     slots = proposal.slots or {}
-    amount = int(slots.get("amount_cents", 0) or 0)
+    amount = _cents(slots.get("amount_cents"))
+    # 必填槽位：退款意图缺金额/缺类型就不许建单 ——
+    # 否则会建出 requested=0 的"partial 假单"，还会停在 REVIEWING 冒充处理中。
+    if proposal.intent is Intent.refund and (amount is None or amount <= 0 or proposal.aftersales_type is None):
+        out = _stop(
+            ticket, traces, t_start, order_ref, StopReason.invalid_output, usage,
+            policy=policy, rid=rid, prompt_version=pv, model=llm.model,
+        )
+        out.out.draft.risk_flags = [ErrorCode.INVALID_OUTPUT.value]
+        return out
+    amount = amount or 0
     signals = Signals(
         order_status=order.status,
         signed_at=order.last_delivered_at,
@@ -163,6 +207,7 @@ def run(
         amount_cents=amount,
         paid_cents=order.paid_cents,
         category=_category(order),
+        aftersales_type=proposal.aftersales_type,
         evidence_provided=bool(slots.get("evidence_provided", False)),
         has_threat=bool(slots.get("has_threat", False)) or bool(THREAT_RE.search(ticket.text)),
         user_requested_human=bool(slots.get("user_requested_human", False)) or bool(HUMAN_RE.search(ticket.text)),
@@ -183,14 +228,17 @@ def run(
             primary_reason=ReasonCode.NOT_A_REFUND,
             policy_version=policy.version,
         )
-    # 模型自己说"拿不准"时，不许自动发（needs_human 是信号，不是授权）
-    elif proposal.needs_human and decision.send_gate is SendGate.auto:
+    # 模型自己说"拿不准"时，不许自动发（needs_human 是信号，不是授权）；
+    # 契约 P12：reason_code 必须落库，但 verdict 保留策略层结论。
+    elif proposal.needs_human:
         codes = [c for c in decision.reason_codes if c is not ReasonCode.OK]
+        if ReasonCode.MODEL_NEEDS_HUMAN not in codes:
+            codes.append(ReasonCode.MODEL_NEEDS_HUMAN)
         decision = decision.model_copy(
             update={
                 "send_gate": SendGate.human,
-                "reason_codes": [*codes, ReasonCode.MODEL_NEEDS_HUMAN],
-                "primary_reason": ReasonCode.MODEL_NEEDS_HUMAN,
+                "reason_codes": codes,
+                "primary_reason": primary_of(codes),
             }
         )
 
@@ -246,17 +294,39 @@ def run(
 
 
 def _check_citations(cites: list[Citation], kb: dict[str, str], flags: list[str]) -> list[Citation]:
-    """引用必须能在知识库里逐字找；找不到的不是"少一条"，是造假（AC18）。"""
+    """引用必须能在知识库里逐字找；找不到的不是"少一条"，是造假（AC18）。
+
+    只认 source="kb"：source="tool" 之类无法逐字核对的来源一律丢弃 ——
+    否则模型只要换个 source 就能绕过校验，伪造"可追溯"。
+    """
     kept: list[Citation] = []
     for c in cites:
-        if c.source == "kb" and c.qa_id not in kb:
+        if c.source != "kb":
             flags.append("CITATION_UNRESOLVED")
             continue
-        if c.source == "kb" and c.quote not in kb.get(c.qa_id or "", ""):
+        if c.qa_id not in kb:
+            flags.append("CITATION_UNRESOLVED")
+            continue
+        if c.quote not in kb.get(c.qa_id or "", ""):
             flags.append("CITATION_QUOTE_MISMATCH")
             continue
         kept.append(c)
     return kept
+
+
+def _cents(raw: Any) -> int | None:
+    """金额一律整数分（CONTRACT §3.3）：整数值浮点/数字串宽容，其余视为缺失。"""
+    if isinstance(raw, bool) or raw is None:
+        return None
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, float):
+        return int(raw) if raw.is_integer() else None
+    if isinstance(raw, str):
+        text = raw.strip()
+        if text.lstrip("-").isdigit():
+            return int(text)
+    return None
 
 
 def _run_id(ticket: TicketIn, order_ref: str, pv: str, policy_version: str, confirm: str | None, llm: LLMConfig) -> str:

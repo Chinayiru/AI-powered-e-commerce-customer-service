@@ -8,7 +8,9 @@ from __future__ import annotations
 import json
 import time
 
+from app.contracts.models import DomainError, ErrorCode
 from app.llm.base import LLMResponse, Proposal
+from app.llm.openai_compat import ProviderError
 
 DRAFTS = {
     "TB1001": (
@@ -60,28 +62,40 @@ SCRIPTED: dict[str, dict] = {
 
 class ScriptedProvider:
     name = "scripted"
-    model = "scripted-v1"
 
-    def __init__(self, *, delay_ms: int = 0, bad_first: dict[str, int] | None = None) -> None:
+    def __init__(self, *, model: str | None = None, delay_ms: int = 0, bad_first: dict[str, int] | None = None) -> None:
+        self.model = model or "scripted-v1"
         self.delay_ms = delay_ms
         self._bad = dict(bad_first or {})
         self.calls = 0
 
-    def propose(self, prompt: str, key: str) -> LLMResponse:
+    def propose(self, prompt: str, key: str, *, timeout_ms: int | None = None) -> LLMResponse:
         self.calls += 1
-        if self.delay_ms:
-            time.sleep(self.delay_ms / 1000)
+        delay = self.delay_ms
+        if timeout_ms is not None and delay > timeout_ms:
+            # 契约 AC22 的"真超时"：先卡到预算上限，再显式失败，而不是睡完再事后判超时
+            time.sleep(timeout_ms / 1000)
+            raise ProviderError(f"scripted 模拟超时：delay_ms={delay} > timeout_ms={timeout_ms}", timeout=True)
+        if delay:
+            time.sleep(delay / 1000)
         if self._bad.get(key, 0) > 0:
             self._bad[key] -= 1
             raw = '{"intent": "refund", "draft": '  # 故意截断，制造 E_INVALID_OUTPUT
         else:
             raw = json.dumps(self._script(key), ensure_ascii=False)
-        return LLMResponse(raw=raw, input_tokens=max(1, len(prompt) // 4), output_tokens=max(1, len(raw) // 4))
+        return LLMResponse(
+            raw=raw,
+            input_tokens=max(1, len(prompt) // 4),
+            output_tokens=max(1, len(raw) // 4),
+            estimated=True,
+        )
 
     def _script(self, key: str) -> dict:
         s = SCRIPTED.get(key)
         if s is None:
-            return {"intent": "other", "aftersales_type": None, "slots": {}, "draft": "您好，已收到您的反馈。", "citations": [], "confidence": 0.5, "needs_human": True}
+            # CONTRACT §8.3：未命中必须显式报 E_SCRIPT_MISS，不许静默降级成 intent=other，
+            # 否则 fixture/order_ref 拼错会被当成"模型看不懂"而悄悄放过。
+            raise DomainError(ErrorCode.SCRIPT_MISS, f"scripted 无剧本: {key!r}")
         slots = {
             "order_ref": key,
             "reason": "用户申请退款",

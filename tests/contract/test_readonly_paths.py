@@ -28,7 +28,7 @@ class FixedProvider:
     name = "scripted"
     model = "scripted-v1"
 
-    def propose(self, prompt: str, key: str) -> LLMResponse:
+    def propose(self, prompt: str, key: str, *, timeout_ms: int | None = None) -> LLMResponse:
         raw = json.dumps(self.payload, ensure_ascii=False)
         return LLMResponse(raw=raw, input_tokens=len(prompt) // 4, output_tokens=len(raw) // 4)
 

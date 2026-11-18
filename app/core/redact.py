@@ -38,11 +38,19 @@ def redact_text(text: str) -> str:
 ADDRESS_KEYS = frozenset({"address", "receiver_address", "shipping_address"})
 
 
-def audit_view(record: dict) -> dict:
-    """日志落盘前的唯一出口。新增字段若含 PII，必须在这里显式处理。"""
-    out = dict(record)
-    for key, value in list(out.items()):
-        if not isinstance(value, str):
-            continue
-        out[key] = mask_address(value) if key in ADDRESS_KEYS else redact_text(value)
-    return out
+def audit_view(record):
+    """日志落盘前的唯一出口。新增字段若含 PII，必须在这里显式处理。
+
+    递归处理 dict/list：记录是嵌套结构（out/draft/trace），只扫顶层等于没扫。
+    """
+    return _walk(record, key=None)
+
+
+def _walk(node, *, key: str | None):
+    if isinstance(node, dict):
+        return {k: _walk(v, key=k) for k, v in node.items()}
+    if isinstance(node, (list, tuple)):
+        return [_walk(v, key=key) for v in node]
+    if isinstance(node, str):
+        return mask_address(node) if key in ADDRESS_KEYS else redact_text(node)
+    return node

@@ -107,6 +107,7 @@ class ReasonCode(str, Enum):
     OUT_OF_WINDOW = "R_OUT_OF_WINDOW"
     AMOUNT_OVER_LIMIT = "R_AMOUNT_OVER_LIMIT"
     POLICY_GRAY_BAND = "R_POLICY_GRAY_BAND"
+    AMOUNT_OVER_PAID = "R_AMOUNT_OVER_PAID"
     MISSING_EVIDENCE = "R_MISSING_EVIDENCE"
     PARTIAL_OVER_RATIO = "R_PARTIAL_OVER_RATIO"
     HUMAN_REQUESTED = "R_HUMAN_REQUESTED"
@@ -259,6 +260,8 @@ class Signals(BaseModel):
     amount_cents: Cents
     paid_cents: Cents
     category: str = "general"
+    # 退货退款在寄回环节才验凭证（AC10）；P8 只对"仅退款"生效，见 CONTRACT §6.3 注
+    aftersales_type: AftersalesType | None = None
     evidence_provided: bool = False
     has_threat: bool = False
     user_requested_human: bool = False

@@ -3,3 +3,7 @@ __pycache__/
 .pytest_cache/
 .review_backup_20261104/
 reports/runs.jsonl
+web/node_modules/
+web/dist/
+target/
+.env

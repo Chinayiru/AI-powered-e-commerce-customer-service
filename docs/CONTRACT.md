@@ -43,7 +43,7 @@
 | NG-3 | 多平台同时接入 | 一个 run 内出现两个 adapter 实例 |
 | NG-4 | 真实电商 API / OAuth / 签名 | 代码里出现 `requests` 调外网、AppSecret |
 | NG-5 | 多轮会话 / 记忆 | 工单按单轮处理；不支持跨工单引用 |
-| NG-6 | 前端工程化 | React/Vue 代码；HTML 只允许 CLI 输出 |
+| NG-6 | ~~前端工程化~~（已按 ADR-011 破例） | 仍不允许：`web/` 里复制金额/时效/类目判断或状态迁移；API 出现第二套业务规则；业务 HTML 由 CLI 之外的地方生成 |
 | NG-7 | 微调 / 训练 | 出现训练脚本、权重文件 |
 | NG-8 | 外部中间件（Redis / MQ / K8s / 托管向量库） | 依赖列表出现这些包 |
 | NG-9 | 图片 / OCR 取证 | 只接受"凭证已提供"这个布尔信号，不解析图片 |
@@ -207,16 +207,20 @@ def evaluate(signals: Signals, policy: RefundPolicy) -> PolicyDecision
 | P3 | 威胁 / 监管 / 媒体曝光 | `R_THREAT_OR_LEGAL` | undecided | human |
 | P4 | 类目排除（`excluded=True`） | `R_CATEGORY_EXCLUDED` | reject | human |
 | P5 | 超出售后期 | `R_OUT_OF_WINDOW` | reject | human |
+| P5b | 金额 > 实付（凭空多退） | `R_AMOUNT_OVER_PAID` | reject | human |
 | P6 | 金额 > human_floor | `R_AMOUNT_OVER_LIMIT` | approve | human |
 | P7 | 灰带（auto < 金额 ≤ human_floor） | `R_POLICY_GRAY_BAND` | approve | human |
-| P8 | 缺凭证（`evidence_provided=False`） | `R_MISSING_EVIDENCE` | undecided | human |
-| P9 | 部分退款超比例 | `R_PARTIAL_OVER_RATIO` | partial | human |
+| P8 | 缺凭证（`evidence_provided=False`，**仅"仅退款"**；退货退款在寄回验收环节看，见 AC10） | `R_MISSING_EVIDENCE` | undecided | human |
+| P9 | 部分退款超比例（只批到 `paid × max_partial_ratio`） | `R_PARTIAL_OVER_RATIO` | partial | human |
 | P10 | 用户明确要求人工 | `R_HUMAN_REQUESTED` | undecided | human |
 | P11 | 模型自报置信 < 0.6 | `R_MODEL_LOW_CONFIDENCE` | undecided | human |
 | P12 | 模型自报 `needs_human=true` | `R_MODEL_NEEDS_HUMAN` | 保留原 verdict | human |
 | — | 无命中 | `R_OK` | approve/partial | auto |
 
 > P11/P12 只是**信号**，不是决定权。策略层永远可以覆写模型结论（ADR-007 沿用）。
+> **verdict 与 send_gate 不可互相替代**：P8/P10/P11 命中时 verdict 必须是 `undecided`，
+> 只把 `send_gate` 抬成 human 而保留 `approve`，等于"人工确认一下就照批"，属于缺陷（v1.4 修）。
+> `R_AMOUNT_OVER_PAID` 与 `R_PARTIAL_OVER_RATIO` 一码一义：前者是"要多于实付"，后者是"比例超上限"。
 
 ### 6.4 只读意图
 
@@ -325,6 +329,16 @@ class TicketOut(BaseModel):       # 出口
 
 `TicketOut` 是全系统唯一出口；CLI 与 HTTP 都返回它，字段不许各写一套。
 
+### 9.1 调用方身份（HTTP 写接口）
+
+- 配置：`.env` 的 `AFTERSALE_OPERATORS="alice:tok-alice,bob:tok-bob"`（`id:token` 对，逗号分隔）。
+  未配置时写接口一律 **503**，不允许"没配就匿名放行"。
+- 请求头：`X-Operator-Id` + `X-Operator-Token`；缺失或不匹配 **401**（常量时间比较，不回显 token）。
+- **审批人只能是自己**：请求体的 `confirm` 若存在，必须等于 `human:<登录操作人>`，否则 **403**；
+  服务端最终写入记录的 `confirm` 由身份推导，不信任请求体自称。
+- 读接口（`/api/meta`、`/api/fixtures`、`/api/runs`、静态页）不要求身份：演示与排障优先。
+- CLI 保持本地可信：仍是 `--confirm human:<id>`；执行者可自行核对 id，无网络鉴权。
+
 ---
 
 ## 10. 错误码（封闭集，出现未登记码即测试失败）
@@ -374,6 +388,9 @@ class TicketOut(BaseModel):       # 出口
 | ADR-008 | 不做队列 | Redis Stream | 一期无真实并发，只增加排障面 | 批量任务需同步跑 |
 | ADR-009 | 工单单轮 | 多轮上下文/摘要折叠 | 少一个失败源 | 复杂追问不做 |
 | ADR-010 | SQLite 默认 | 直接上 MySQL | 离线可复现、可整库封存 | 需维护第二个实现 |
+| ADR-011 | 破例 NG-6：新增 `web/` 控制台 + 只读/跑单 HTTP API | 继续只用 CLI；或先做静态 HTML 报告 | 演示与排障需要可视化证据链；API 只编排 `pipeline.run`，CLI 仍可复现同一结果 | 多一套前端依赖与构建产物；API 需随 CLI 同步 |
+| ADR-012 | 模型走配置（`AFTERSALE_LLM_PROVIDER/BASE_URL/MODEL/API_KEY`），提供 `OpenAICompatProvider`；测试强制 scripted | 把真实模型写进代码默认值；或在测试里也调真实模型 | 换模型只改 `.env` 不改代码；真实模型非确定性，会破坏 AC16/AC20，故测试用 autouse fixture 锁死 scripted | 多一层配置解析与脱敏；真实模型回放的 `drift` 属预期 |
+| ADR-013 | 写接口要求已验证操作人（`AFTERSALE_OPERATORS` + `X-Operator-*`），`confirm` 必须等于登录身份；`auto` 缺配置直接报错，不再静默回退 scripted | 继续允许匿名 `POST /api/runs`；或让 `auto` 缺 key 时念台词 | 审批与打款必须能归因到"谁确认的"；静默回退会让线上"以为在调模型、其实在回放"，事故不可归因 | 控制台多一步登录；本地演示需在 `.env` 配一个 `id:token` |
 
 ---
 
@@ -383,3 +400,6 @@ class TicketOut(BaseModel):       # 出口
 | --- | --- | --- |
 | v1 | 2026-11-09 | 首版。取代"不修改已确认 schemas"这条无处落地的约束。 |
 | v1.1 | 2026-11-10 | 补 `R_NOT_A_REFUND`（只读意图）与 `R_MODEL_NEEDS_HUMAN`（模型自请人工只能收紧闸门）；P0–P10 顺延为 P0–P12，新增 §6.4；`run_id` 计入模型配置，避免超时跑与正常跑同号。 |
+| v1.2 | 2026-11-12 | 破例 NG-6：新增 `app/api/server.py`（薄封装 `pipeline.run` 的 HTTP API）与 `web/` React 控制台（ADR-011）；策略、状态机、闸门仍只有一份实现。 |
+| v1.3 | 2026-11-12 | 接入 OpenAI 兼容真实模型（ADR-012）：`app/llm/openai_compat.py` + `settings.resolve()` + `factory.make_provider()`；CLI `--provider`、API `provider/max_tokens` 字段与记录里的 `llm` 五元组；测试 autouse 锁 scripted；`app.eval.seal --provider` 另存新基线。 |
+| v1.4 | 2026-11-18 | 评审 M1–M12 修正：P8/P10/P11 命中必须 `undecided`（不能只抬 send_gate）；新增 `R_AMOUNT_OVER_PAID`（P5b）与 P9 只批到比例上限；P8 限定"仅退款"（与 AC10 对齐）；`needs_human` 进 PRIORITY（P12）；`scripted` 未命中抛 `E_SCRIPT_MISS`；模型超时前置到请求；平台脏值统一 `E_PLATFORM_ANOMALY`；trace 脱敏接入生产路径。另：写接口要求操作人身份（§9.1、ADR-013），`auto` 缺配置报错。 |
