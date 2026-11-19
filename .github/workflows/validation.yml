@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# windows-latest 的控制台默认是 cp1252/cp936，脚本里的中文输出会直接 UnicodeEncodeError
+env:
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: utf-8
+
 jobs:
   java-tests:
     name: Java tests
