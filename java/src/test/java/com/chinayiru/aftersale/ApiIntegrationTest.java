@@ -191,6 +191,52 @@ class ApiIntegrationTest {
     }
 
     @Test
+    void refundDraftWithoutAmountCannotBeSent() throws Exception {
+        JsonNode created = createTicket("AFTERSALE", "我要退款", "O1001", "U001");
+        String ticketId = created.path("ticketId").asText();
+        // 模拟 Python 返回 REFUND_REQUEST 但 suggestedAction 没有金额的脏数据。
+        jdbc.update("UPDATE draft SET suggested_action_json = ? WHERE ticket_id = ?",
+                "{\"action\":\"REFUND\",\"amountCents\":null,\"needHumanConfirm\":true}", ticketId);
+
+        MvcResult send = postJson("/api/agent/tickets/" + ticketId + "/send",
+                sendBody("已为您提交退款申请（演示环境，未真实退款）。", 1, "已人工复核", 3, null),
+                "X-Agent-Token", AGENT_TOKEN);
+
+        assertThat(send.getResponse().getStatus()).isEqualTo(409);
+        assertThat(json(send).path("code").asText()).isEqualTo("POLICY_REJECTED");
+        assertThat(agentView(ticketId).path("ticket").path("state").asText()).isEqualTo("DRAFT_READY");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM execution_task WHERE ticket_id = ?",
+                Integer.class, ticketId)).isZero();
+    }
+
+    @Test
+    void sendWithoutExpectedVersionIsInvalidArgs() throws Exception {
+        JsonNode created = createTicket("AFTERSALE", "我要退款", "O1001", "U001");
+        String ticketId = created.path("ticketId").asText();
+        Map<String, Object> body = sendBody("已为您提交退款申请（演示环境，未真实退款）。", 1,
+                "已人工复核", 3, null);
+        body.remove("expectedVersion");
+
+        MvcResult send = postJson("/api/agent/tickets/" + ticketId + "/send", body,
+                "X-Agent-Token", AGENT_TOKEN);
+
+        assertThat(send.getResponse().getStatus()).isEqualTo(422);
+        assertThat(json(send).path("code").asText()).isEqualTo("INVALID_ARGS");
+        assertThat(agentView(ticketId).path("ticket").path("state").asText()).isEqualTo("DRAFT_READY");
+    }
+
+    @Test
+    void unsupportedContentTypeIsNotInternalError() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/tickets")
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("not json")
+                .header("X-User-Id", "U001")).andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(422);
+        assertThat(json(result).path("code").asText()).isEqualTo("INVALID_ARGS");
+    }
+
+    @Test
     void sendIsIdempotentAndConsumerSeesCompletion() throws Exception {
         JsonNode created = createTicket("AFTERSALE", "我要退款", "O1001", "U001");
         String ticketId = created.path("ticketId").asText();
@@ -317,6 +363,38 @@ class ApiIntegrationTest {
                 "X-Internal-Identity", other);
         assertThat(forbidden.getResponse().getStatus()).isEqualTo(404);
         assertThat(json(forbidden).path("code").asText()).isEqualTo("ORDER_NOT_FOUND");
+    }
+
+    @Test
+    void internalIdentityCannotBeReplayedAcrossEndpoints() throws Exception {
+        String identity = internalIdentity.issue("U001", "python");
+
+        MvcResult first = postJson("/internal/tools/queryOrder", Map.of("orderNo", "O1001"),
+                "X-Internal-Identity", identity);
+        assertThat(first.getResponse().getStatus()).isEqualTo(200);
+
+        // nonce 不再按 path 分桶同一身份换一个工具端点也必须被拒绝。
+        MvcResult crossEndpoint = postJson("/internal/tools/getLogistics", Map.of("orderNo", "O1002"),
+                "X-Internal-Identity", identity);
+        assertThat(crossEndpoint.getResponse().getStatus()).isEqualTo(401);
+    }
+
+    @Test
+    void agentRoleCannotCallInternalTools() throws Exception {
+        String identity = internalIdentity.issue("U001", "agent");
+
+        MvcResult result = postJson("/internal/tools/queryOrder", Map.of("orderNo", "O1001"),
+                "X-Internal-Identity", identity);
+        assertThat(result.getResponse().getStatus()).isEqualTo(403);
+        assertThat(json(result).path("code").asText()).isEqualTo("FORBIDDEN_SCOPE");
+    }
+
+    @Test
+    void blankAgentTokenIsRejected() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/agent/tickets/anything")
+                .header("X-Agent-Token", "")).andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(401);
+        assertThat(json(result).path("code").asText()).isEqualTo("UNAUTHENTICATED");
     }
 
     @Test

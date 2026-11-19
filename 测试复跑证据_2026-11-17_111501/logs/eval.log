@@ -1,0 +1,101 @@
+# 售后 AI 指标评测报告（QC01–QC13）
+
+- 数据集：`holdout_v1.jsonl` （sha256 `6cd90bb053fa9661…`，共 50 例）
+- provider：`scripted`，prompt `p1.0.0`，policy `2026-11`
+
+| 指标 | 结果 | 门槛 | 结论 |
+| --- | --- | --- | --- |
+| QC02 意图准确率（5 类，HANDOFF 不计分母） | 75.0% （30/40） | ≥85% | 未达标 |
+| QC03 槽位 orderNo 召回 | 100.0%（精确率 100.0%） | ≥90% | 达标 |
+| QC04 检索 Recall@3 | 32.4% | 观测项 | — |
+| QC05 草稿可用率 | 未评（需双人评分） | ≥80% | 待人工 |
+| QC06 引用可解析率 | 100.0%（金标交集率 39.3%） | ≥85% | 达标 |
+| QC07 幻觉率 | 0.0%（0 例） | ≤5% | 达标 |
+| QC09 成本 | 0.0 元/次（rule-based（scripted provider）） | 观测项 | — |
+| QC10 延迟 P50/P95 | 0.02 / 0.05 ms | 观测项 | — |
+| QC13 转人工原因精确率 | 100.0% （召回 60.0%） | 报告项 | — |
+
+## 结论
+
+- QC02 意图准确率：未达标（关注点：rule-based 分类器对同义表达覆盖不足）
+- QC03 槽位召回：达标（关注点：orderNo 抽取与上下文补全）
+- QC07 幻觉率：达标（关注点：禁用词与金额越界）
+- QC06 引用可解析：达标（关注点：引用是否指向存在的条款）
+- QC08 置信度分层：低置信区间准确率 66.7%、高置信区间 73.7%，单调（置信度有区分度）
+- 本报告只做测量。修复项应在独立的 dev 集上验证，直接按 holdout 误判调规则会让 holdout 失去留出集意义。
+
+## QC02 混淆矩阵（行=金标，列=预测）
+
+| 金标 \ 预测 | REFUND_REQUEST | REFUND_ELIGIBILITY | LOGISTICS | POLICY | OTHER | HANDOFF |
+| --- | --- | --- | --- | --- | --- | --- |
+| REFUND_REQUEST | 7 | 0 | 1 | 0 | 0 | 0 |
+| REFUND_ELIGIBILITY | 3 | 2 | 2 | 1 | 0 | 0 |
+| LOGISTICS | 0 | 0 | 7 | 0 | 1 | 0 |
+| POLICY | 0 | 0 | 1 | 6 | 1 | 0 |
+| OTHER | 0 | 0 | 0 | 0 | 8 | 0 |
+
+### QC02 误判用例
+
+- `H08` 金标 REFUND_REQUEST → 预测 LOGISTICS：O1003 我知道过了七天了，我也知道你们有规定，可这东西我确实用不上，家里人也一直催，你就通融一下给办了吧
+- `H09` 金标 REFUND_ELIGIBILITY → 预测 REFUND_REQUEST：O1007用了两天，包装盒已经扔了，说明书也找不着了，这种情况还能退吗，我怕你们说拆过就不给退
+- `H10` 金标 REFUND_ELIGIBILITY → 预测 LOGISTICS：O1003签收40天了，还能退不
+- `H11` 金标 REFUND_ELIGIBILITY → 预测 LOGISTICS：O1001还没发货呢，现在退要不要扣手续费啊
+- `H13` 金标 REFUND_ELIGIBILITY → 预测 POLICY：O1002快递还没到，我有点后悔了，昨天看到别家便宜三十块，这种情况能退不，运费要不要我自己出
+- `H14` 金标 REFUND_ELIGIBILITY → 预测 REFUND_REQUEST：O1009赠品单能不能退啊，退了正装会不会有影响
+- `H15` 金标 REFUND_ELIGIBILITY → 预测 REFUND_REQUEST：O1006这么多钱，退了会不会不给我退啊，有没有什么限制
+- `H24` 金标 LOGISTICS → 预测 OTHER：O1005什么时候能发出来，我急着用
+- `H25` 金标 POLICY → 预测 LOGISTICS：退款一般多久能到我卡里
+- `H30` 金标 POLICY → 预测 OTHER：钱是退到原路还是退到余额里
+
+### QC04 检索未覆盖用例
+
+- `H01` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H02` 金标 ['refund-policy#3.2', 'refund-policy#3.1'] / top3 ['refund-policy#3.1']
+- `H03` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H04` 金标 ['refund-policy#3.1', 'refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H05` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H06` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H08` 金标 ['refund-policy#3.1', 'refund-policy#3.2'] / top3 无引用
+- `H09` 金标 ['refund-policy#3.1', 'refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H10` 金标 ['refund-policy#3.1'] / top3 无引用
+- `H11` 金标 ['refund-policy#3.1', 'refund-policy#3.3'] / top3 无引用
+- `H13` 金标 ['refund-policy#3.1', 'refund-policy#3.2'] / top3 ['logistics-sla#1.1', 'refund-policy#3.1']
+- `H14` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H15` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+- `H19` 金标 ['logistics-sla#1.1'] / top3 无引用
+- `H20` 金标 ['logistics-sla#1.1'] / top3 无引用
+- `H21` 金标 ['logistics-sla#1.1'] / top3 无引用
+- `H24` 金标 ['logistics-sla#1.1'] / top3 无引用
+- `H25` 金标 ['refund-policy#3.3'] / top3 无引用
+- `H30` 金标 ['refund-policy#3.3'] / top3 无引用
+- `H31` 金标 ['after-sale-process#4.1'] / top3 ['refund-policy#3.1']
+- `H32` 金标 ['refund-policy#3.2'] / top3 ['refund-policy#3.1']
+
+## QC08 置信度分层
+
+| 区间 | 样本数 | 准确率 | 转人工占比 |
+| --- | --- | --- | --- |
+| lt_0.60 | 12 | 66.7% | 0.0% |
+| 0.60_0.85 | 0 | — | — |
+| ge_0.85 | 38 | 73.7% | 15.8% |
+
+## 契约行为补充检查
+
+- 无单号且应追问的用例：3，回复中出现“订单号”追问：3
+- 查无此单（O9999）：2，回复明确“没查到/核对”：1，其中需人工复核：1
+- 降级标记（degraded）：0
+
+## QC12 同集重跑
+
+- 用例逐条比对变化：0 条；准确率 75.0% → 75.0%（差值 0.0 个百分点）
+
+## 未评项说明
+
+- QC05：草稿可用率要求双人独立评分并计算 Cohen's κ（BOUNDARY §15.2 QC05），脚本无法代替人工判断。此处只报可自动统计的分母。
+- QC06 语义部分：可解析率与金标交集率是必要条件；语义层面的引用正确性仍需人工抽检。
+- QC09：当前实现不调用 LLM，成本为 0；接入模型后需按 token 用量重测本项。
+- QC11 版本记录：见 `eval/eval_result.json` 的 `qc11_version`。
+
+
+JSON -> C:\Users\18240\Documents\ChatGPT\电商工单\复跑测试_2026-11-17_111501\python\eval\eval_result.json
+Markdown -> C:\Users\18240\Documents\ChatGPT\电商工单\复跑测试_2026-11-17_111501\python\eval\report.md

@@ -34,6 +34,10 @@ public class AccessGuard {
     }
 
     public void requireAgent(String token) {
+        // 先拒绝空值：若配置被误设为空串，constantTimeEquals("", "") 会返回 true。
+        if (token == null || token.isBlank()) {
+            throw new ApiException(ErrorCode.UNAUTHENTICATED, "缺少坐席凭证");
+        }
         if (!HmacService.constantTimeEquals(token, properties.getSecurity().getAgentToken())) {
             throw new ApiException(ErrorCode.UNAUTHENTICATED, "坐席凭证无效");
         }

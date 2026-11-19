@@ -132,32 +132,34 @@ public final class ApiDtos {
             @NotBlank @Size(max = 500) String text,
             @Min(1) int draftVersion,
             @Size(min = 5, max = 500) String reviewNote,
-            int expectedVersion,
+            @NotNull @Min(1) Integer expectedVersion,
             @NotBlank String requestId) {
     }
 
-    public record RegenerateRequest(String note, int expectedVersion, @NotBlank String requestId) {
+    public record RegenerateRequest(String note, @NotNull @Min(1) Integer expectedVersion,
+                                    @NotBlank String requestId) {
     }
 
     public record HandoffRequest(
             @NotNull TransferReason reason,
-            int expectedVersion,
+            @NotNull @Min(1) Integer expectedVersion,
             @NotBlank String requestId) {
     }
 
     public record ReplyRequest(
             @NotBlank @Size(max = 500) String text,
-            int expectedVersion,
+            @NotNull @Min(1) Integer expectedVersion,
             @NotBlank String requestId) {
     }
 
-    public record CloseRequest(int expectedVersion, @NotBlank String requestId) {
+    public record CloseRequest(@NotNull @Min(1) Integer expectedVersion, @NotBlank String requestId) {
     }
 
     public record TicketStateResponse(String ticketId, String state, int version) {
     }
 
-    public record SendResult(String state, boolean edited, int editDistance, int draftVersion) {
+    public record SendResult(String state, boolean edited, int editDistance,
+                             int draftVersion, int version) {
     }
 
     // ---------- 内部工具 ----------

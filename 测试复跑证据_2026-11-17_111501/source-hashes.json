@@ -1,0 +1,472 @@
+[
+  {
+    "path": "java\\pom.xml",
+    "sha256": "8F1BE1EDF68B909D6104BB448F315F2BD8ACD5A0F060FA0F4164E4535F6D1F27",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\AftersaleApplication.java",
+    "sha256": "32F5C771519F29B26D35664D3E8AA6A387E938BF44A9298EE5CCF83155B5CCD4",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\AgentClient.java",
+    "sha256": "F65AA8FCBF7A19413D3385CC0B9C1C44A490DB0F92FF8D49C0B08BA22328100F",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\AgentClientConfig.java",
+    "sha256": "D151EA32FA2136D2BAC22E07EC0B9E79A8B90FABBDE38179821AC738A5587FA8",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\AgentContract.java",
+    "sha256": "9AA2393016C7AA7777A476657E869A847EE3013F6E7ABB3635DF7950CCB72BBE",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\AgentResponseValidator.java",
+    "sha256": "2EB518C144079D598D883613B2059D39B17CFEA499836C50CE7CEDC05FFAD323",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\AgentUnavailableException.java",
+    "sha256": "E75A0704E5C7914039CEBC68FD7E51D17B46B0F8DE4A649038CA10C8042D3B01",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\HttpAgentClient.java",
+    "sha256": "7351E570AA6C834F1A4191C19DC707F413755D78A53436367DD17F0667FEB88C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\agent\\ScriptedAgentClient.java",
+    "sha256": "B8B6465AE1C85ACCAEEECEC5B7DA6D02C45DB9B1132C5C81094355B83315C20F",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\api\\AgentTicketController.java",
+    "sha256": "684F9E5F76147EE4C57C2BF99C4D7F1F1589466C77B242926CF7FB8B1C0B893D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\api\\ConsumerTicketController.java",
+    "sha256": "756C4D45D77BD50D4E2ED1364E79DD6CF435347E0CD09DCB77F16760E449B15D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\api\\InternalToolController.java",
+    "sha256": "276A417AE34997414D726486785844780E8E3C74C39449D820FA05F34C98A56C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\api\\dto\\ApiDtos.java",
+    "sha256": "E71A05BD72FFA4A92F1CA871C3919D5179A74EF853238E2CE44258996163BFD1",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\auth\\AccessGuard.java",
+    "sha256": "07A92438425819A47D4BF721D2CAFC2C9B49F16EE2870AC38C56CDC8BAA52A88",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\auth\\HmacService.java",
+    "sha256": "1FC8E2F58DD818A70EA37B48CAE0096F9FB84AA805217F17FD144AF6B46A8771",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\auth\\InternalIdentityService.java",
+    "sha256": "94E0202D28348F1343BF966295C17ED1B3933A195D2AEB33317D4D0AC3788E63",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\auth\\TicketTokenService.java",
+    "sha256": "7E2C176F982EC597395CF484CAED3CD69D1ADD74C4DB9DE7CED07304D70F572C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\ApiException.java",
+    "sha256": "835EAF79FA1BD3618A55371381E2F274CAA038BA841D7E523611BD462FAD1762",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\ErrorCode.java",
+    "sha256": "929DC617A6E74AB02AD1E6287C8C3CBEF3AD7FC8D9356BBC0F28B936A48C78D1",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\ErrorResponse.java",
+    "sha256": "21D3223568DB3D90E6CCDACF87D91491367094DC6DDC4FD89453A5A1FC2627F4",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\GlobalExceptionHandler.java",
+    "sha256": "18BC818C8151E167048CFF697063FDFCDD459157D1B7FB63092DC9D77A282101",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\Hashing.java",
+    "sha256": "DBAABA7F5061EEFC3F38E960755C114837722D8B4D133151FF3959453628CB69",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\JsonCodec.java",
+    "sha256": "67943D3F2ABF8A2A4B3982CB4B737F20EE50D5395C7B7D02048CCC5ACA995CF3",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\TimeUtil.java",
+    "sha256": "46852FE417FBAE1985BFA8C906BF1546FF194FBD2C526D61CD8B4CA717911F53",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\common\\TraceFilter.java",
+    "sha256": "E7E621AB85BD5E4BE655C06054E361010DC439CB7FA5C421A9545DFAA6A85445",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\config\\AppProperties.java",
+    "sha256": "5BE243507F3F58948ADBDCAF5CCE911A851090FB67412941A5350A258AA07654",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\config\\StartupGuard.java",
+    "sha256": "3EA7E9C1583A43929A6513B84800E4BD36B5434358C91D9BC23DFEECF00173A9",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\config\\TransactionConfig.java",
+    "sha256": "7F40A216AA57D50F819E2631654D9B56BDE825EDBBA6E0A76998CE4BA83CABF6",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ActionType.java",
+    "sha256": "496B79E785C04B6C86D5E27089BCD84C9DE8F15998EB03F2B0D79CD74821B1B5",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\AuditLog.java",
+    "sha256": "56056DE0470BE3BF73C557440DB157D5C230437F168A3C7C0CC4120337D9C13D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\Category.java",
+    "sha256": "09EC0815B7D939AD3C4A031358A6FD729C4DE595DCBAB4EE480FAD924E831837",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\DisplayStates.java",
+    "sha256": "BE6112EA54C45ADFCED52E6E59E826064B3F927C6C3E323CC2394EC85AA3A982",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\Draft.java",
+    "sha256": "1A73E5608054AF5ED1D194606AE62B9C053947F33412C1DFDB0F5A2F02BAC9A1",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ExecutionMode.java",
+    "sha256": "C5FBCEB923F4FA47AA70EC211E1FB4C57305A60D94CE1DE5A6BEC2BDA83D2D81",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ExecutionState.java",
+    "sha256": "171318B3CD81F33A9745CA2A1D2CCC2DB217ABA2D0FFB08327FD05744A4E8605",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ExecutionTask.java",
+    "sha256": "4E45ED6AC91420C595AAF4ACE4BA74DC10962396E9D83867387E03BE746E376D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\IdempotencyRecord.java",
+    "sha256": "3458DDE274EC274EAF66B43D3EC4067D600055BACEA65C959C1176ED856B06FF",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\IdemState.java",
+    "sha256": "CEFBDB6D35E71C0181CDFC02EABE93C376112E64C9635AA4CB0323DF3EBBBBA8",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\IntentType.java",
+    "sha256": "BAE222BE07A07B6D3A22E2824A3B61B57FAE37660E5C4E6C7ED5FFD16619E907",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\MessageRole.java",
+    "sha256": "33B019DD83B2F0929DB3D38BBBAA4081985F13FC2BC0A5279CB3FFA0BA3C2452",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ReplyType.java",
+    "sha256": "D02152DA1F89126229AF7E7F3746BE8EFA0D82079E9FFE3AB8FB1587EF6D230F",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\Ticket.java",
+    "sha256": "4FCF5EF577CF34BA6CF3C7E6313C7AD913F3189A0BA2E37D34AFDD493C15F794",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\TicketMessage.java",
+    "sha256": "85CD74DCA3C862A31D717688E09AC38E1143A415AA1E40F905FB0405156CBD5A",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\TicketState.java",
+    "sha256": "5B25593D329BFD77B93053013C3A54EF0A3D1CD151F681E9892880B64D8A7CB5",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\ToolCall.java",
+    "sha256": "4DE4C94F6AC2312ACFDE808FA8BF493A9F986E8BD8FBDDE468B866639325074D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\domain\\TransferReason.java",
+    "sha256": "608F191891112A80F9FD3CD0A8FBF416A58A44CF9BE811B58B3C0206DE361B72",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\AuditMapper.java",
+    "sha256": "CCA6A766EFD72DDDB76DD796967B4B2793E08B4802B33E372EE8B8AAD9BF5C59",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\DraftMapper.java",
+    "sha256": "4C23409928F3F213F55C319768CA2FCAE4D8A11B9D524AC7839DB6E54FAC6DD2",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\ExecutionTaskMapper.java",
+    "sha256": "78F41DF13BC5B854E25F19C81ADAAC128D560F1AB57825B68AC33F949D747C2D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\IdempotencyMapper.java",
+    "sha256": "4906D73101B7B0A44611815B1FBE5A7D248B489AA15285734D424371E366A59E",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\MessageMapper.java",
+    "sha256": "356F69556EDAA6D6CB3A0A612FA538409B97F1CF1D21FA11B1FF3A62441AE193",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\SequenceMapper.java",
+    "sha256": "28086F49442ACD0ADABF67B571539F353AC68EAE5655C55FAA286028F38CE3CB",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\TicketMapper.java",
+    "sha256": "F3EE6C097AE0FD568A6D92BC6A4FB94A68B874711C45E9C1579B912E7AEECAFF",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\mapper\\ToolCallMapper.java",
+    "sha256": "3D3A5BA66786C398941CDC5510D53ABCC2FD65F3C3DB30D4784D14CD8F4E0085",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\policy\\PolicyDecision.java",
+    "sha256": "BD11E6B0D5B453FCE70C850F5DFBBC54A8AD1D702FEF176B98A56A710EDEC0BB",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\policy\\PolicyService.java",
+    "sha256": "AFA4FAF6F022476AC051CA11F403BE1B361061BD7A2B5B2970E563C865A3CFE8",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\AgentService.java",
+    "sha256": "D843CC2766D5D64B521741F0017EFC8E75B86652A32F61CC5A1F7434A86AA984",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\AssociatedTicketService.java",
+    "sha256": "DF56EDA41E84DC9CB55C7C3179FAC53C36B8CFEEF5DAF172BD4397182ADF1ECA",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\DefaultSimulatedExecutor.java",
+    "sha256": "36D704B5799E0BBE25DCE1A9BC63B64F9AB219F93667A74AB6CF5A967BBC8270",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\GenerationOutcome.java",
+    "sha256": "D3FFAF66CC75A44AF3F888836947D446C823AD0191DD78BACF3432D9A10A7A18",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\GenerationService.java",
+    "sha256": "AA187FB91174EFDB42D0CE2C139813885DCA92A45C8C5C626C2320028F96595E",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\IdempotencyService.java",
+    "sha256": "2F6275B9C4E2F36F851EA6142C9E4E45C1A70104DB9ECCF191F1062C2A2EEBBB",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\SimulatedExecutor.java",
+    "sha256": "54F074137EBDFF0BD01EBC308E338143D95B57A2DD89DF8C80B90BD3BC5D221C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\TicketIdGenerator.java",
+    "sha256": "D33BDCAD5ACB7E668E43AAE9DBBD405671BABD0438729841F5297FBF07816268",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\TicketService.java",
+    "sha256": "BABD953EFDF4871D588748A93AA7189DD9A300EADEBC6367507CA41320F69431",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\service\\TicketViewMapper.java",
+    "sha256": "450D9A832431CCFBE6FE67AC2557293A922D97D681079E67A5C608302D47CA07",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\tool\\OrderModels.java",
+    "sha256": "7F288B54D8BAD976CA6B9CE542C8A211B7CD272B2E6A7792C805F884E8654D68",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\java\\com\\chinayiru\\aftersale\\tool\\OrderToolService.java",
+    "sha256": "CB20A9868540665A6B14298B9C169E13C769670B9AD037AF399CF624D8EC9B55",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\application-dev.yml",
+    "sha256": "E2D6C443D2EB47606B49189BE2C34D0872BC16198BE45D7FE6C0807BA98D95EE",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\application-mysql.yml",
+    "sha256": "F2AEAEF4C541308D6B70133E08D3B9201D98CFB60F6F2FA4B3E26668F57D7C2C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\application-prod.yml",
+    "sha256": "CB2E8B31441CF05BCC7B43B060408D076740937D36DC1BAEC4FAB8653BBACAAE",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\application-test.yml",
+    "sha256": "F60B4D00D6589049DFEE52660F5837EB4F16D7FCDB3CD2DCA956D123C9EA9995",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\application.yml",
+    "sha256": "3E4699CF89A15A2A78753DC8F0383D3275C7B875FE05690ABC4B31D6774F91D2",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\db\\schema-h2.sql",
+    "sha256": "E9AF62EC81F6D023AA1EE96B852631C23A6D677D3D5AD6857DFEFCD24C71B091",
+    "match": true
+  },
+  {
+    "path": "java\\src\\main\\resources\\db\\schema-mysql.sql",
+    "sha256": "6B76842809A95945743F93C5F0CC4CFFC8F30C617F1D3A013E8E5B4E31C9F907",
+    "match": true
+  },
+  {
+    "path": "java\\src\\test\\java\\com\\chinayiru\\aftersale\\ApiIntegrationTest.java",
+    "sha256": "27FF2D56047466214B0A48E4DD048C40CE19AEAA5719C942936EFF4ED8F3F88D",
+    "match": true
+  },
+  {
+    "path": "java\\src\\test\\java\\com\\chinayiru\\aftersale\\ConsultConversionTest.java",
+    "sha256": "51A025E6C75ADBA51D7072258C1767B43B86B2BB4B231D3F3E49DF62A147C62C",
+    "match": true
+  },
+  {
+    "path": "java\\src\\test\\java\\com\\chinayiru\\aftersale\\SendExecutionRetryTest.java",
+    "sha256": "5347E835D1D1F2C2816BE6E5D2C4E81E23C054C8F2D131DFA83C7A802BCECE2A",
+    "match": true
+  },
+  {
+    "path": "python\\app\\__init__.py",
+    "sha256": "73C3000F32724A059F0CE0297A42094D9B8CA7733F4774A4B56B379DBDBABD72",
+    "match": true
+  },
+  {
+    "path": "python\\app\\agent.py",
+    "sha256": "C6AD9CFC555F634751AE09F203484198938024198996FC037787BB2F5BCDC45D",
+    "match": true
+  },
+  {
+    "path": "python\\app\\config.py",
+    "sha256": "946146AD06A0C24C919D5F581418753C74B680067BB7CDCB71ACB3883F864B45",
+    "match": true
+  },
+  {
+    "path": "python\\app\\contracts.py",
+    "sha256": "732F3B486AFE909EF2948E54CC7FE7A4CC1C964898C141EC41A4CEAF4E468ECA",
+    "match": true
+  },
+  {
+    "path": "python\\app\\identity.py",
+    "sha256": "0C41E4FC5D05E83D8C5311D4ACF2C32BD45F3B387F34D5F417547844781DEFFA",
+    "match": true
+  },
+  {
+    "path": "python\\app\\intent.py",
+    "sha256": "9FEA6EA2305CFD45187010F96C2647E226E0FC686C51C07FA9410E054E1A57CC",
+    "match": true
+  },
+  {
+    "path": "python\\app\\knowledge.py",
+    "sha256": "F8CE9F088F383EC40C5FC10FA21BA97299D2F8C416107D266AC6DBBCEF14CF3A",
+    "match": true
+  },
+  {
+    "path": "python\\app\\main.py",
+    "sha256": "5A8147DF9FCB770DD5E5496B058ADD3942BBA4306A933BD4214B3F2F7342792F",
+    "match": true
+  },
+  {
+    "path": "python\\app\\tools.py",
+    "sha256": "91F9BBBA6507305E463AC220D787FE770C47934F4BAAAB5672344FB3B9B49C93",
+    "match": true
+  },
+  {
+    "path": "python\\tests\\conftest.py",
+    "sha256": "B4C4768A80B5AA4029A92A839F6C203C358B3D8CBE4AC425C44E0CDACDC76AEC",
+    "match": true
+  },
+  {
+    "path": "python\\tests\\test_agent.py",
+    "sha256": "FD747DE2F73A5CC8D704DD3935FDD07E06BB344DEDA173EF4A0FFB5EC7EFA907",
+    "match": true
+  },
+  {
+    "path": "python\\eval\\run_eval.py",
+    "sha256": "E1FF4C2F47E4BB63050703D617FACCB286545F65A9A214FCAA1862EDD5856805",
+    "match": true
+  },
+  {
+    "path": "python\\eval\\holdout_v1.jsonl",
+    "sha256": "6CD90BB053FA966191B661A3362D5BBFF20E2D4C9EE21C67064B537DFD1F08CD",
+    "match": true
+  },
+  {
+    "path": "python\\pytest.ini",
+    "sha256": "EB06FD6A11670A8364A4BABE3059D7A64D262EA03AE2BE2E3CFE5EA6F7CE000D",
+    "match": true
+  },
+  {
+    "path": "python\\requirements.txt",
+    "sha256": "09A97DD553831594ABE7FE83C8C451C59D6A3CC741ACC3899F10E634E12403F0",
+    "match": true
+  },
+  {
+    "path": "scripts\\e2e_smoke.py",
+    "sha256": "51034C5085A35189A0DAC4A0B3B005E4AD8364C22C262C7536E5DADC3EB8807B",
+    "match": true
+  }
+]

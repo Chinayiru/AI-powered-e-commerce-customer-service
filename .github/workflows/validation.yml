@@ -1,0 +1,75 @@
+name: Engineering tests and quality gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java-tests:
+    name: Java tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: java/pom.xml
+      - run: mvn -B test
+        working-directory: java
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: java-surefire
+          path: java/target/surefire-reports/
+
+  python-tests:
+    name: Python tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.14'
+          cache: pip
+          cache-dependency-path: |
+            python/requirements.txt
+            python/constraints.txt
+      - run: python -m pip install -r python/requirements.txt
+      - run: python -m pytest --junitxml=pytest-results.xml
+        working-directory: python
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-junit
+          path: python/pytest-results.xml
+
+  qc02-gate:
+    name: QC02 quality gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.14'
+          cache: pip
+          cache-dependency-path: |
+            python/requirements.txt
+            python/constraints.txt
+      - run: python -m pip install -r python/requirements.txt
+      - name: Generate current evaluation
+        run: python python/eval/run_eval.py --json qc-eval.json --markdown qc-report.md
+      - name: Enforce QC02 threshold
+        run: python scripts/check_eval_gate.py qc-eval.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qc-evaluation
+          path: |
+            qc-eval.json
+            qc-report.md

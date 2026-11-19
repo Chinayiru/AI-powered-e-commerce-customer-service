@@ -146,13 +146,18 @@ public class TicketService {
 
         // 事务外触发首轮生成：Python Agent 与工具调用都可能超时，
         // 失败时由 GenerationService 统一降级为转人工，不会回滚已经创建的工单。
+        GenerationOutcome outcome = null;
         if (ticket.getState() == TicketState.AI_RUNNING) {
             String message = request.text();
-            ticket = generationService.generate(ticket.getTicketId(), message, request.requestId(), null)
-                    .ticket();
+            outcome = generationService.generate(ticket.getTicketId(), message, request.requestId(), null);
+            ticket = outcome.ticket();
         }
-        TicketCreated created = viewMapper.ticketCreated(ticket,
-                ticketTokens.issue(ticket.getTicketId(), userId));
+        // 咨询单建单即表达退款诉求时，首轮生成会另建关联售后单（AC20）。此时若仍回传原咨询单的
+        // 凭据，客户端既拿不到新单、也看不到任何回复文案（原单只剩「已回复」空壳），
+        // 因此优先回传新单凭据，与 POST /messages 的 createdTicket 语义保持一致。
+        TicketCreated created = outcome != null && outcome.createdTicket() != null
+                ? outcome.createdTicket()
+                : viewMapper.ticketCreated(ticket, ticketTokens.issue(ticket.getTicketId(), userId));
         return ResponseEntity.status(201).body(created);
     }
 

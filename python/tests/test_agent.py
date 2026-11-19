@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
+from app.config import Settings
+from app.identity import IdentityError, issue_identity, verify_identity
 from app.main import create_app
 
 
@@ -214,6 +218,79 @@ def test_response_contract_is_strict_and_safe(client, auth):
     for banned in ("赔付", "赔偿", "保证", "一定", "百分百", "已退款", "已处理"):
         assert banned not in body["replyDraft"]
     assert "REFUND_REQUEST" not in body["replyDraft"]
+
+
+def test_body_user_must_match_verified_identity(client, auth):
+    body = payload("订单 O1001 还能退吗", order_no="O1001")
+    body["userId"] = "U002"
+
+    # A 的签名 + body 写 B：验签通过但身份不一致，必须 403。
+    response = client.post("/internal/agent/ask", json=body, headers=auth("U001"))
+    assert response.status_code == 403
+    assert response.json()["code"] == "FORBIDDEN_SCOPE"
+
+
+def test_python_role_cannot_call_the_agent(client, auth):
+    response = client.post(
+        "/internal/agent/ask",
+        json=payload("订单 O1001 还能退吗", order_no="O1001"),
+        headers=auth("U001", role="python"),
+    )
+    assert response.status_code == 403
+    assert response.json()["code"] == "FORBIDDEN_SCOPE"
+
+
+def test_hmac_secret_is_required_from_env(monkeypatch):
+    monkeypatch.delenv("AFTERSALE_HMAC_SECRET", raising=False)
+
+    with pytest.raises(RuntimeError, match="AFTERSALE_HMAC_SECRET"):
+        Settings.from_env()
+
+
+def test_hmac_secret_must_be_long_enough(monkeypatch):
+    monkeypatch.setenv("AFTERSALE_HMAC_SECRET", "too-short")
+
+    with pytest.raises(RuntimeError, match="长度不足"):
+        Settings.from_env()
+
+
+def test_internal_identity_nonce_is_global_across_paths(settings):
+    header = issue_identity("U001", "python", settings.hmac_secret)
+
+    first = verify_identity(header, "/internal/tools/queryOrder", settings.hmac_secret)
+    assert first.userId == "U001"
+
+    with pytest.raises(IdentityError, match="replayed"):
+        verify_identity(header, "/internal/tools/getLogistics", settings.hmac_secret)
+
+
+class BoomAgent:
+    def answer(self, request, *, user_id=None):
+        raise RuntimeError("boom")
+
+
+def test_unhandled_agent_error_returns_contract_body(settings, auth):
+    from fastapi.testclient import TestClient
+
+    app = create_app(service=BoomAgent(), settings=settings)
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.post(
+            "/internal/agent/ask",
+            json=payload("订单 O1001 还能退吗", order_no="O1001"),
+            headers=auth(),
+        )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "AGENT_UNAVAILABLE"
+    assert body["retryable"] is True
+    assert body["traceId"] == "trace-test"
+
+
+def test_context_order_no_has_max_length(client, auth):
+    response = post(client, auth, payload("查一下订单", order_no="O" * 33))
+    assert response.status_code == 422
+    assert response.json()["code"] == "INVALID_ARGS"
 
 
 def test_contract_shape_matches_java_slots(client, auth):

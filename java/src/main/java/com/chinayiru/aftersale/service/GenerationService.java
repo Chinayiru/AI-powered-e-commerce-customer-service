@@ -2,7 +2,6 @@ package com.chinayiru.aftersale.service;
 
 import com.chinayiru.aftersale.agent.AgentClient;
 import com.chinayiru.aftersale.agent.AgentContract;
-import com.chinayiru.aftersale.agent.AgentUnavailableException;
 import com.chinayiru.aftersale.api.dto.ApiDtos.TicketCreated;
 import com.chinayiru.aftersale.auth.InternalIdentityService;
 import com.chinayiru.aftersale.auth.TicketTokenService;
@@ -33,6 +32,7 @@ import com.chinayiru.aftersale.tool.OrderModels.Order;
 import com.chinayiru.aftersale.tool.OrderModels.PackageInfo;
 import com.chinayiru.aftersale.tool.OrderModels.Shipment;
 import com.chinayiru.aftersale.tool.OrderToolService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -52,6 +52,7 @@ import java.util.UUID;
  * 迟到结果：仅当 state 仍为 AI_RUNNING 且 generationTaskId/taskEpoch/currentAttempt
  * 全部匹配时才发布，否则记 LATE_RESULT_DROPPED。
  */
+@Slf4j
 @Service
 public class GenerationService {
 
@@ -106,25 +107,27 @@ public class GenerationService {
         List<TicketMessage> messages = messageMapper.listByTicket(ticketId);
         String effectiveMessage = messageText == null ? lastCustomerText(messages) : messageText;
 
-        // AI 调用在事务外执行；超时/5xx 只影响本轮结果，不影响工单已落库的状态。
-        AgentContract.AskResponse response;
+        // AI 调用在事务外执行；任何未预期异常都必须把 AI_RUNNING 收敛到 TRANSFERRED，
+        // 不能让工单卡在“生成中”等待人工发现。
         try {
-            response = agentClient.ask(buildRequest(ticket, effectiveMessage, requestId, attempt, messages),
+            AgentContract.AskResponse response = agentClient.ask(
+                    buildRequest(ticket, effectiveMessage, requestId, attempt, messages),
                     internalIdentity.issueForAgent(ticket.getUserId()));
-        } catch (AgentUnavailableException ex) {
-            transferDueToAgentFailure(ticket, traceId);
+
+            // 咨询中提出退款诉求时，不改变原咨询单语义，而是新建关联售后单；
+            // 原单转 REPLIED，新单继续生成草稿，并把新单 token 回传给客户端。
+            if (ticket.getCategory() == Category.CONSULT && response.intent() == IntentType.REFUND_REQUEST) {
+                return handleConsultToAftersale(ticket, response, effectiveMessage, requestId, traceId,
+                        taskId, epoch, attempt);
+            }
+
+            tx.executeWithoutResult(status -> publish(ticket, response, taskId, epoch, attempt, traceId));
+            return new GenerationOutcome(ticketMapper.findById(ticketId), null);
+        } catch (RuntimeException ex) {
+            log.error("generation failed ticketId={} type={}", ticketId, ex.getClass().getSimpleName(), ex);
+            transferDueToAgentFailure(ticket, traceId, ex);
             return new GenerationOutcome(ticketMapper.findById(ticketId), null);
         }
-
-        // 咨询中提出退款诉求时，不改变原咨询单语义，而是新建关联售后单；
-        // 原单转 REPLIED，新单继续生成草稿，并把新单 token 回传给客户端。
-        if (ticket.getCategory() == Category.CONSULT && response.intent() == IntentType.REFUND_REQUEST) {
-            return handleConsultToAftersale(ticket, response, effectiveMessage, requestId, traceId,
-                    taskId, epoch, attempt);
-        }
-
-        tx.executeWithoutResult(status -> publish(ticket, response, taskId, epoch, attempt, traceId));
-        return new GenerationOutcome(ticketMapper.findById(ticketId), null);
     }
 
     private AgentContract.AskRequest buildRequest(Ticket ticket, String message, String requestId,
@@ -172,7 +175,8 @@ public class GenerationService {
                 markWaitingInput(current, null, TransferReason.INSUFFICIENT_INFO, traceId);
                 return null;
             }
-            AssociatedTicketService.Shell created = associatedTickets.createShell(current, orderNo, traceId);
+            // 同样先抢占咨询单状态，成功后再建关联售后单；
+            // 否则并发撤销时会遗留一张没有父单承接的售后单。
             int rows = ticketMapper.transition(current.getTicketId(), current.getVersion(),
                     Set.of(TicketState.AI_RUNNING.name()), TicketState.REPLIED,
                     null, false, false, 0, null, false, TimeUtil.now());
@@ -180,6 +184,7 @@ public class GenerationService {
                 audit(current.getTicketId(), "LATE_RESULT_DROPPED", "consult-refund-transition", traceId);
                 return null;
             }
+            AssociatedTicketService.Shell created = associatedTickets.createShell(current, orderNo, traceId);
             audit(current.getTicketId(), "CONSULT_TO_AFTERSALE",
                     "newTicketId=" + created.ticket().getTicketId(), traceId);
             return created;
@@ -222,11 +227,14 @@ public class GenerationService {
             ticket = ticketMapper.findById(ticket.getTicketId());
         }
         boolean needsOrder = needsOrder(ticket.getCategory(), response.intent());
+        // 计时必须包住真实的工具调用：之前的 start 取在 findOwned 之后，
+        // 写进 tool_call 的 latencyMs 恒为 0，是假指标。
+        long toolStart = System.nanoTime();
         Optional<Order> maybeOrder = candidate == null
                 ? Optional.empty()
                 : orderTools.findOwned(ticket.getUserId(), candidate);
         if (candidate != null) {
-            recordToolCall(ticket.getTicketId(), response.intent(), candidate, maybeOrder, traceId);
+            recordToolCall(ticket.getTicketId(), response.intent(), candidate, maybeOrder, toolStart, traceId);
         }
         // 已明确给出订单号但查无此单：首次提示核对，第二次无论意图如何都按 ORDER_NOT_FOUND 转人工。
         if (candidate != null && maybeOrder.isEmpty() && ticket.getStalledRounds() > 0) {
@@ -260,7 +268,8 @@ public class GenerationService {
         PolicyDecision policy;
         Long amount = response.suggestedAction() == null ? null : response.suggestedAction().amountCents();
         if (refundIntent) {
-            policy = policyService.evaluate(order, amount);
+            // REFUND_REQUEST 必须带金额；REFUND_ELIGIBILITY 只是资格咨询，可以没有退款动作。
+            policy = policyService.evaluate(order, amount, response.intent() == IntentType.REFUND_REQUEST);
             if (!policy.allowed() && !"OUTSIDE_RETURN_WINDOW".equals(policy.code())) {
                 transfer(ticket, TransferReason.POLICY_BLOCKED,
                         policy.explanation() + (response.replyDraft() == null ? "" : " " + response.replyDraft()),
@@ -277,6 +286,16 @@ public class GenerationService {
                 || (amount != null && amount > properties.getRefund().getAutoSuggestLimitCents());
         String reply = safeReply(response.replyDraft(),
                 refundIntent ? "请坐席根据订单情况补充回复。" : policy.explanation());
+
+        // 先抢占工单状态，再写草稿：若期间客户已撤销/坐席已改单，transition 会返回 0，
+        // 此时直接丢弃本轮结果，不能留下“已撤销工单 + 活跃草稿”的脏数据。
+        int rows = ticketMapper.transition(ticket.getTicketId(), ticket.getVersion(),
+                Set.of(TicketState.AI_RUNNING.name()), TicketState.DRAFT_READY,
+                null, false, false, 0, null, false, TimeUtil.now());
+        if (rows != 1) {
+            audit(ticket.getTicketId(), "LATE_RESULT_DROPPED", "draft-transition", traceId);
+            return;
+        }
 
         Draft draft = new Draft();
         draft.setDraftId(UUID.randomUUID().toString());
@@ -299,14 +318,6 @@ public class GenerationService {
         draft.setCreatedAt(TimeUtil.now());
         draftMapper.insert(draft);
         draftMapper.supersedeOthers(ticket.getTicketId(), draft.getDraftId());
-
-        int rows = ticketMapper.transition(ticket.getTicketId(), ticket.getVersion(),
-                Set.of(TicketState.AI_RUNNING.name()), TicketState.DRAFT_READY,
-                null, false, false, 0, null, false, TimeUtil.now());
-        if (rows != 1) {
-            audit(ticket.getTicketId(), "LATE_RESULT_DROPPED", "draft-transition", traceId);
-            return;
-        }
         audit(ticket.getTicketId(), "DRAFT_CREATED",
                 "draftVersion=" + draft.getDraftVersion() + ", policy=" + policy.code(), traceId);
     }
@@ -338,7 +349,7 @@ public class GenerationService {
         audit(ticket.getTicketId(), "CONSULT_REPLIED", "confidence=" + response.confidence(), traceId);
     }
 
-    private void transferDueToAgentFailure(Ticket ticket, String traceId) {
+    private void transferDueToAgentFailure(Ticket ticket, String traceId, RuntimeException cause) {
         tx.executeWithoutResult(status -> {
             Ticket current = ticketMapper.findById(ticket.getTicketId());
             if (current == null || current.getState() != TicketState.AI_RUNNING) {
@@ -349,7 +360,8 @@ public class GenerationService {
                     TransferReason.TOOL_FAILED, false, false, 0, null, false, TimeUtil.now());
             if (rows == 1) {
                 addAgentMessage(current.getTicketId(), "AI 服务暂时不可用，已转人工处理。");
-                audit(current.getTicketId(), "TRANSFERRED", "TOOL_FAILED", traceId);
+                audit(current.getTicketId(), "TRANSFERRED",
+                        "TOOL_FAILED," + cause.getClass().getSimpleName(), traceId);
             }
         });
     }
@@ -406,8 +418,7 @@ public class GenerationService {
     }
 
     private void recordToolCall(String ticketId, IntentType intent, String orderNo,
-                                Optional<Order> order, String traceId) {
-        long start = System.nanoTime();
+                                Optional<Order> order, long startNanos, String traceId) {
         ToolCall call = new ToolCall();
         call.setTicketId(ticketId);
         call.setStep(toolCallMapper.nextStep(ticketId));
@@ -417,7 +428,7 @@ public class GenerationService {
             call.setName("queryOrder");
             call.setOk(false);
             call.setErrorCode("ORDER_NOT_FOUND");
-            call.setLatencyMs((int) ((System.nanoTime() - start) / 1_000_000));
+            call.setLatencyMs(elapsedMs(startNanos));
             call.setSummary("未查询到订单 " + orderNo);
             toolCallMapper.insert(call);
             return;
@@ -425,7 +436,6 @@ public class GenerationService {
         Order value = order.get();
         call.setName(intent == IntentType.LOGISTICS ? "getLogistics" : "queryOrder");
         call.setOk(true);
-        call.setLatencyMs((int) ((System.nanoTime() - start) / 1_000_000));
         call.setResponseHash(Hashing.shortHash(json.write(value)));
         if (intent == IntentType.LOGISTICS) {
             Shipment shipment = orderTools.shipmentFor(value.userId(), orderNo);
@@ -438,7 +448,20 @@ public class GenerationService {
             call.setSummary("订单 " + orderNo + " 状态 " + value.status()
                     + "，可退 " + value.refundableAmountCents() + " 分");
         }
+        // 物流分支里还有一次 shipmentFor，耗时统计放在最后取，含两次工具调用。
+        call.setLatencyMs(elapsedMs(startNanos));
         toolCallMapper.insert(call);
+    }
+
+    private static int elapsedMs(long startNanos) {
+        long micros = (System.nanoTime() - startNanos) / 1_000L;
+        if (micros < 0) {
+            return 0;
+        }
+        // 保留亚毫秒精度：一次内存查表往往不到 1ms，直接取整数毫秒会全是 0，
+        // 所以这里向上取整到 1ms，避免"指标全零"再次掩盖真实耗时。
+        long millis = (micros + 999L) / 1_000L;
+        return (int) Math.min(Integer.MAX_VALUE, millis);
     }
 
     private void addAgentMessage(String ticketId, String text) {

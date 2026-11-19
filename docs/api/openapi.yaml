@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: 售后辅助处理 · 接口契约
-  version: 1.5.1
+  version: 1.5.2
   description: |
     对应 docs/BOUNDARY_v1.md v1.4.1（2026-11-11），对应关系见 docs/contract-snapshot.json。
     v1.4.0：消费者响应改用 displayState + version；撤销/追加消息所需版本号补齐。
@@ -11,6 +11,8 @@ info:
     v1.5.1（随 BOUNDARY v1.4.1）：`send` 新增 `202`（受理成功、执行未完成，`state=CONFIRMED`），
     `200` 语义收紧为三段全部完成（`state=CLOSED`），补 `500`；消费者查询描述改「六态」。
     接口形状未新增请求/响应字段。
+    v1.5.2：`SendResult` 补必返 `version`（202 后客户端需用它 + 新 requestId 推进执行）；
+    `POST /api/tickets` 的 `201` 说明补「咨询建单即转售后时返回新售后单凭据」（AC20）。
     分三组：消费者 /api/**、坐席 /api/agent/**、内部 /internal/**（Java ↔ Python ↔ 工具）。
     所有写接口必须带 requestId（UUIDv4），幂等；冲突语义见 errors。
     **未知字段策略**：消费者与坐席端点忽略未知字段（向前兼容）；`/internal/**` 严格拒绝（`additionalProperties: false`）。
@@ -56,7 +58,10 @@ paths:
                 value: { category: CONSULT, text: "退货运费一般谁承担？", requestId: "0b3f9c2a-1f1e-4a77-9a2d-8f0b7c3d2e44" }
       responses:
         '201':
-          description: 已建单
+          description: |
+            已建单，返回 `ticketToken`。
+            `category=CONSULT` 且首条消息即表达退款诉求时，按 AC20 另建关联售后单，
+            此时**返回的是新售后单**的凭据（`category=AFTERSALE`）；原咨询单保留为 `REPLIED`。
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TicketCreated' }
@@ -176,6 +181,8 @@ paths:
             受理成功、执行未完成：确认已提交（`state=CONFIRMED` 或当前实际状态），
             模拟执行失败或尚未完成，已落库待重试。详细错误码见坐席详情与审计，不在响应体新增字段。
             同一 `requestId` 重复提交返回原受理结果（仍为 202），不得重复批准或执行。
+            推进执行须在 CONFIRMED 状态下携带响应中的 `version` 与**新** `requestId` 重新调用 `send`，
+            此时不再重复确认、不重复写坐席回复，执行成功后返回 200 与 `state=CLOSED`。
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SendResult' }
@@ -650,12 +657,17 @@ components:
 
     SendResult:
       type: object
-      required: [state, edited, editDistance, draftVersion]
+      required: [state, edited, editDistance, draftVersion, version]
       properties:
         state: { $ref: '#/components/schemas/TicketStateCode' }
         edited: { type: boolean, description: 服务端计算，不信任前端 }
         editDistance: { type: integer }
         draftVersion: { type: integer }
+        version:
+          type: integer
+          description: |
+            响应时刻工单版本。202 时据此携带新的 `expectedVersion` 换新 `requestId` 重试执行；
+            200 时为 CLOSED 后的版本。
 
     RegenerateRequest:
       type: object

@@ -43,9 +43,8 @@ public class HmacService {
         if (payload == null || signature == null) {
             return false;
         }
-        byte[] expected = sign(payload).getBytes(StandardCharsets.UTF_8);
-        byte[] actual = signature.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expected, actual);
+        // 固定时间比较签名串，避免按字节短路泄露前缀信息。
+        return constantTimeEquals(sign(payload), signature);
     }
 
     public String encode(String payload) {

@@ -1,0 +1,1774 @@
+{
+  "qc01_dataset": {
+    "total": 50,
+    "intent_counts": {
+      "REFUND_REQUEST": 8,
+      "REFUND_ELIGIBILITY": 8,
+      "LOGISTICS": 8,
+      "POLICY": 8,
+      "OTHER": 8,
+      "HANDOFF": 10
+    },
+    "five_classes_each_at_least_8": true,
+    "order_states": {
+      "DELIVERED": 7,
+      "NONE": 25,
+      "PAID": 12,
+      "SHIPPED": 6
+    },
+    "three_order_states_covered": true,
+    "no_order_cases": 27,
+    "expect_no_order_cases": 3,
+    "not_found_cases": 2,
+    "ambiguous_cases": 1,
+    "unique_ids": true,
+    "message_length_ok": true,
+    "pass": true
+  },
+  "qc02_intent": {
+    "accuracy_5class": 0.75,
+    "total_5class": 40,
+    "correct_5class": 30,
+    "confusion_matrix": {
+      "REFUND_REQUEST": {
+        "REFUND_REQUEST": 7,
+        "REFUND_ELIGIBILITY": 0,
+        "LOGISTICS": 1,
+        "POLICY": 0,
+        "OTHER": 0
+      },
+      "REFUND_ELIGIBILITY": {
+        "REFUND_REQUEST": 3,
+        "REFUND_ELIGIBILITY": 2,
+        "LOGISTICS": 2,
+        "POLICY": 1,
+        "OTHER": 0
+      },
+      "LOGISTICS": {
+        "REFUND_REQUEST": 0,
+        "REFUND_ELIGIBILITY": 0,
+        "LOGISTICS": 7,
+        "POLICY": 0,
+        "OTHER": 1
+      },
+      "POLICY": {
+        "REFUND_REQUEST": 0,
+        "REFUND_ELIGIBILITY": 0,
+        "LOGISTICS": 1,
+        "POLICY": 6,
+        "OTHER": 1
+      },
+      "OTHER": {
+        "REFUND_REQUEST": 0,
+        "REFUND_ELIGIBILITY": 0,
+        "LOGISTICS": 0,
+        "POLICY": 0,
+        "OTHER": 8
+      }
+    },
+    "per_class": {
+      "REFUND_REQUEST": {
+        "support": 8,
+        "correct": 7,
+        "recall": 0.875
+      },
+      "REFUND_ELIGIBILITY": {
+        "support": 8,
+        "correct": 2,
+        "recall": 0.25
+      },
+      "LOGISTICS": {
+        "support": 8,
+        "correct": 7,
+        "recall": 0.875
+      },
+      "POLICY": {
+        "support": 8,
+        "correct": 6,
+        "recall": 0.75
+      },
+      "OTHER": {
+        "support": 8,
+        "correct": 8,
+        "recall": 1.0
+      }
+    },
+    "go_nogo": 0.85,
+    "gate_pass": false,
+    "handoff_recall": 0.6,
+    "handoff_support": 10,
+    "wrong_cases": [
+      {
+        "id": "H08",
+        "gold": "REFUND_REQUEST",
+        "pred": "LOGISTICS",
+        "message": "O1003 我知道过了七天了，我也知道你们有规定，可这东西我确实用不上，家里人也一直催，你就通融一下给办了吧",
+        "reply": "没查到订单 O1003，请核对订单号后重新提供。"
+      },
+      {
+        "id": "H09",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "REFUND_REQUEST",
+        "message": "O1007用了两天，包装盒已经扔了，说明书也找不着了，这种情况还能退吗，我怕你们说拆过就不给退",
+        "reply": "订单 O1007，已签收，实付 ¥66.00，可退 ¥66.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。"
+      },
+      {
+        "id": "H10",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "LOGISTICS",
+        "message": "O1003签收40天了，还能退不",
+        "reply": "没查到订单 O1003，请核对订单号后重新提供。"
+      },
+      {
+        "id": "H11",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "LOGISTICS",
+        "message": "O1001还没发货呢，现在退要不要扣手续费啊",
+        "reply": "没查到订单 O1001，请核对订单号后重新提供。"
+      },
+      {
+        "id": "H13",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "POLICY",
+        "message": "O1002快递还没到，我有点后悔了，昨天看到别家便宜三十块，这种情况能退不，运费要不要我自己出",
+        "reply": "现货订单通常在 48 小时内发货；运输时效以承运商实际配送为准，平台不承诺具体送达时间。自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。[logistics-sla#1.1][refund-policy#3.1]"
+      },
+      {
+        "id": "H14",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "REFUND_REQUEST",
+        "message": "O1009赠品单能不能退啊，退了正装会不会有影响",
+        "reply": "订单 O1009，待发货，实付 ¥0.00，可退 ¥0.00。当前暂无可退金额，需人工进一步核实。"
+      },
+      {
+        "id": "H15",
+        "gold": "REFUND_ELIGIBILITY",
+        "pred": "REFUND_REQUEST",
+        "message": "O1006这么多钱，退了会不会不给我退啊，有没有什么限制",
+        "reply": "订单 O1006，待发货，实付 ¥250.00，可退 ¥250.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。"
+      },
+      {
+        "id": "H24",
+        "gold": "LOGISTICS",
+        "pred": "OTHER",
+        "message": "O1005什么时候能发出来，我急着用",
+        "reply": "已收到您关于订单 O1005 的问题。请补充具体诉求，由坐席进一步核实。"
+      },
+      {
+        "id": "H25",
+        "gold": "POLICY",
+        "pred": "LOGISTICS",
+        "message": "退款一般多久能到我卡里",
+        "reply": "请提供订单号，我帮您核实订单状态和物流信息。"
+      },
+      {
+        "id": "H30",
+        "gold": "POLICY",
+        "pred": "OTHER",
+        "message": "钱是退到原路还是退到余额里",
+        "reply": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。"
+      }
+    ]
+  },
+  "qc03_slots": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "exact_match": 1.0,
+    "target_recall": 0.9,
+    "gate_pass": true,
+    "tp": 26,
+    "fp": 0,
+    "fn": 0,
+    "wrong_cases": []
+  },
+  "qc04_recall_at_3": {
+    "cases_with_gold_clauses": 28,
+    "recall_at_3": 0.3235,
+    "all_gold_hit_rate": 0.25,
+    "misses": [
+      {
+        "id": "H01",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H02",
+        "gold": [
+          "refund-policy#3.2",
+          "refund-policy#3.1"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H03",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H04",
+        "gold": [
+          "refund-policy#3.1",
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H05",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H06",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H08",
+        "gold": [
+          "refund-policy#3.1",
+          "refund-policy#3.2"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H09",
+        "gold": [
+          "refund-policy#3.1",
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H10",
+        "gold": [
+          "refund-policy#3.1"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H11",
+        "gold": [
+          "refund-policy#3.1",
+          "refund-policy#3.3"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H13",
+        "gold": [
+          "refund-policy#3.1",
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "logistics-sla#1.1",
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H14",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H15",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H19",
+        "gold": [
+          "logistics-sla#1.1"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H20",
+        "gold": [
+          "logistics-sla#1.1"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H21",
+        "gold": [
+          "logistics-sla#1.1"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H24",
+        "gold": [
+          "logistics-sla#1.1"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H25",
+        "gold": [
+          "refund-policy#3.3"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H30",
+        "gold": [
+          "refund-policy#3.3"
+        ],
+        "top3": []
+      },
+      {
+        "id": "H31",
+        "gold": [
+          "after-sale-process#4.1"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      },
+      {
+        "id": "H32",
+        "gold": [
+          "refund-policy#3.2"
+        ],
+        "top3": [
+          "refund-policy#3.1"
+        ]
+      }
+    ]
+  },
+  "qc05_draft": {
+    "status": "未评",
+    "reason": "草稿可用率要求双人独立评分并计算 Cohen's κ（BOUNDARY §15.2 QC05），脚本无法代替人工判断。此处只报可自动统计的分母。",
+    "cases_with_reply_draft": 50,
+    "total": 50,
+    "draft_coverage": 1.0,
+    "go_nogo": 0.8
+  },
+  "qc06_citation": {
+    "resolvable_rate": 1.0,
+    "total_citations": 26,
+    "unknown_citations": [],
+    "citation_coverage_non_handoff": 0.4545,
+    "gold_overlap_rate": 0.3929,
+    "gold_overlap_denominator": 28,
+    "note": "可解析率与金标交集率是必要条件；语义层面的引用正确性仍需人工抽检。",
+    "go_nogo": 0.85
+  },
+  "qc07_hallucination": {
+    "flagged_cases": 0,
+    "total": 50,
+    "hallucination_rate": 0.0,
+    "threshold": 0.05,
+    "gate_pass": true,
+    "details": []
+  },
+  "qc08_confidence": {
+    "buckets": {
+      "lt_0.60": {
+        "count": 12,
+        "accuracy": 0.6667,
+        "handoff_ratio": 0.0
+      },
+      "0.60_0.85": {
+        "count": 0,
+        "accuracy": null,
+        "handoff_ratio": null
+      },
+      "ge_0.85": {
+        "count": 38,
+        "accuracy": 0.7368,
+        "handoff_ratio": 0.1579
+      }
+    }
+  },
+  "qc09_cost": {
+    "mode": "rule-based（scripted provider）",
+    "tokens_per_request": 0,
+    "cost_per_request": 0.0,
+    "note": "当前实现不调用 LLM，成本为 0；接入模型后需按 token 用量重测本项。"
+  },
+  "qc10_latency": {
+    "p50_ms": 0.02,
+    "p95_ms": 0.05,
+    "max_ms": 0.16,
+    "n": 50,
+    "note": "进程内直调 AgentService，工具为内存夹具；不含 HTTP/序列化开销。"
+  },
+  "qc11_version": {
+    "dataset": "holdout_v1.jsonl",
+    "dataset_sha256": "6cd90bb053fa966191b661a3362d5bbff20e2d4c9ee21c67064b537dfd1f08cd",
+    "policy_version": "2026-11",
+    "prompt_version": "p1.0.0",
+    "provider": "scripted",
+    "python_version": "3.12.14",
+    "harness": "eval/run_eval.py"
+  },
+  "qc12_rerun": {
+    "comparable": true,
+    "changed_cases": 0,
+    "details": [],
+    "metric": "QC02 同口径（5 类，HANDOFF 不计分母）",
+    "accuracy_first": 0.75,
+    "accuracy_second": 0.75,
+    "delta_points": 0.0,
+    "deterministic": true
+  },
+  "qc13_handoff": {
+    "predicted_handoff": 6,
+    "gold_handoff": 10,
+    "reason_accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 0.6,
+    "false_positive_cases": [],
+    "reason_mismatch": [],
+    "note": "报告项，非合入门槛（BOUNDARY §15.2）。"
+  },
+  "extra_checks": {
+    "expect_no_order_cases": 3,
+    "asked_order_no_cases": 3,
+    "not_found_cases": 2,
+    "not_found_handled_cases": 1,
+    "not_found_need_review": 1,
+    "degraded_cases": 0
+  },
+  "cases": [
+    {
+      "id": "H01",
+      "message": "O1001这个我不要了，帮我退了",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1001",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1001",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1001，待发货，实付 ¥58.00，可退 ¥58.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 5800,
+      "latency_ms": 0.16
+    },
+    {
+      "id": "H02",
+      "message": "O1002 顺丰那个在路上了吧？我改主意了别送了，直接给我退款",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1002",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2",
+        "refund-policy#3.1"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1002",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1002，已发货，实付 ¥129.00，可退 ¥129.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 12900,
+      "latency_ms": 0.048
+    },
+    {
+      "id": "H03",
+      "message": "O1006买重了，一模一样的买了两件，250块呢，家里也放不下，你赶紧帮我退了吧，钱退我原来那张卡上就行",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1006",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1006",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1006，待发货，实付 ¥250.00，可退 ¥250.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 25000,
+      "latency_ms": 0.039
+    },
+    {
+      "id": "H04",
+      "message": "O1007 收到货了不太喜欢，我要退货退款，包装还在的",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1007",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1",
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1007",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1007，已签收，实付 ¥66.00，可退 ¥66.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 6600,
+      "latency_ms": 0.055
+    },
+    {
+      "id": "H05",
+      "message": "O1009 那个赠品单我不要了，退掉吧",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1009",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1009",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1009，待发货，实付 ¥0.00，可退 ¥0.00。当前暂无可退金额，需人工进一步核实。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.032
+    },
+    {
+      "id": "H06",
+      "message": "刚说的那三十块钱那单，别发了，退钱",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": "O1005",
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1005",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "订单 O1005，待发货，实付 ¥30.00，可退 ¥30.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 3000,
+      "latency_ms": 0.035
+    },
+    {
+      "id": "H07",
+      "message": "帮我退款谢谢",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": true,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "请提供订单号，我帮您核实订单状态和可退金额。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.018
+    },
+    {
+      "id": "H08",
+      "message": "O1003 我知道过了七天了，我也知道你们有规定，可这东西我确实用不上，家里人也一直催，你就通融一下给办了吧",
+      "gold_intent": "REFUND_REQUEST",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1003",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1",
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1003",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1003，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.027
+    },
+    {
+      "id": "H09",
+      "message": "O1007用了两天，包装盒已经扔了，说明书也找不着了，这种情况还能退吗，我怕你们说拆过就不给退",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1007",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1",
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1007",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1007，已签收，实付 ¥66.00，可退 ¥66.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 6600,
+      "latency_ms": 0.037
+    },
+    {
+      "id": "H10",
+      "message": "O1003签收40天了，还能退不",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1003",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1003",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1003，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.018
+    },
+    {
+      "id": "H11",
+      "message": "O1001还没发货呢，现在退要不要扣手续费啊",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1001",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1",
+        "refund-policy#3.3"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1001",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1001，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H12",
+      "message": "那个40块的已经发货了，我要是不要了还能退吗",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": "O1008",
+      "gold_clauses": [
+        "refund-policy#3.1"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_ELIGIBILITY",
+      "transfer_reason": null,
+      "order_no": "O1008",
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "查到了：订单 O1008，已发货，实付 ¥40.00，可退 ¥40.00。已发货或已签收可申请退货退款，七天无理由自签收次日起算。[refund-policy#3.1]",
+      "citations": [
+        "refund-policy#3.1",
+        "logistics-sla#1.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.034
+    },
+    {
+      "id": "H13",
+      "message": "O1002快递还没到，我有点后悔了，昨天看到别家便宜三十块，这种情况能退不，运费要不要我自己出",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1002",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1",
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": "O1002",
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "现货订单通常在 48 小时内发货；运输时效以承运商实际配送为准，平台不承诺具体送达时间。自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。[logistics-sla#1.1][refund-policy#3.1]",
+      "citations": [
+        "logistics-sla#1.1",
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.036
+    },
+    {
+      "id": "H14",
+      "message": "O1009赠品单能不能退啊，退了正装会不会有影响",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1009",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1009",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1009，待发货，实付 ¥0.00，可退 ¥0.00。当前暂无可退金额，需人工进一步核实。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.027
+    },
+    {
+      "id": "H15",
+      "message": "O1006这么多钱，退了会不会不给我退啊，有没有什么限制",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1006",
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1006",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1006，待发货，实付 ¥250.00，可退 ¥250.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 25000,
+      "latency_ms": 0.026
+    },
+    {
+      "id": "H16",
+      "message": "前天买的东西拆开用了，还能不能退",
+      "gold_intent": "REFUND_ELIGIBILITY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": true,
+      "intent": "REFUND_ELIGIBILITY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "请提供订单号，我帮您核实订单状态和物流信息。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.019
+    },
+    {
+      "id": "H17",
+      "message": "O1002到哪了",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1002",
+      "context_order_no": null,
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1002",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "订单 O1002 物流运输中：MOCK002（运输中）。最新：到达分拨中心。",
+      "citations": [
+        "logistics-sla#1.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.027
+    },
+    {
+      "id": "H18",
+      "message": "O1008发的啥快递，一般几天能到",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1008",
+      "context_order_no": null,
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1008",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "订单 O1008 物流运输中：MOCK008（运输中）。最新：派送中。",
+      "citations": [
+        "logistics-sla#1.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.029
+    },
+    {
+      "id": "H19",
+      "message": "O1001付了两天了咋还不发货，我下周三就要用，你们不是写着48小时发货吗，到底什么时候能发出来",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1001",
+      "context_order_no": null,
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1001",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1001，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.019
+    },
+    {
+      "id": "H20",
+      "message": "O1007显示签收了可是我根本没收到，家里一天都有人，快递员也没给我打电话，到底给我放哪了",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1007",
+      "context_order_no": null,
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1007",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1007，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H21",
+      "message": "就那个单子，快递说给我放门口了，我回来没看见",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": "O1003",
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O1003",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O1003，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H22",
+      "message": "我快递到哪了",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": true,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "请提供订单号，我帮您核实订单状态和物流信息。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H23",
+      "message": "O9999这单物流一直不动，帮我查查",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O9999",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": "O9999",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "没查到订单 O9999，请核对订单号后重新提供。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.014
+    },
+    {
+      "id": "H24",
+      "message": "O1005什么时候能发出来，我急着用",
+      "gold_intent": "LOGISTICS",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1005",
+      "context_order_no": null,
+      "gold_clauses": [
+        "logistics-sla#1.1"
+      ],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": "O1005",
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您关于订单 O1005 的问题。请补充具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.023
+    },
+    {
+      "id": "H25",
+      "message": "退款一般多久能到我卡里",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.3"
+      ],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "请提供订单号，我帮您核实订单状态和物流信息。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.016
+    },
+    {
+      "id": "H26",
+      "message": "衣服不合适退回去，运费谁出啊",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "return-shipping#2.1"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "因商品质量问题退货的，运费由商家承担；无理由退货的，运费由消费者承担，另有约定除外。[return-shipping#2.1]",
+      "citations": [
+        "return-shipping#2.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.024
+    },
+    {
+      "id": "H27",
+      "message": "七天无理由是从签收那天开始算还是发货那天",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.1"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。现货订单通常在 48 小时内发货；运输时效以承运商实际配送为准，平台不承诺具体送达时间。[refund-policy#3.1][logistics-sla#1.1]",
+      "citations": [
+        "refund-policy#3.1",
+        "logistics-sla#1.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.028
+    },
+    {
+      "id": "H28",
+      "message": "退货要准备啥材料，流程怎么走的，我头一回弄这个，是不是得先拍照上传，然后等你们审核通过再寄回去",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "after-sale-process#4.1"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "提交售后申请后由坐席确认；确认前不会产生真实退款。申请时需提供订单号与问题描述。自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。[after-sale-process#4.1][refund-policy#3.1]",
+      "citations": [
+        "after-sale-process#4.1",
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.028
+    },
+    {
+      "id": "H29",
+      "message": "质量有问题的话，退货运费也得我自己掏吗",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "return-shipping#2.1"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。因商品质量问题退货的，运费由商家承担；无理由退货的，运费由消费者承担，另有约定除外。[refund-policy#3.1][return-shipping#2.1]",
+      "citations": [
+        "refund-policy#3.1",
+        "return-shipping#2.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.024
+    },
+    {
+      "id": "H30",
+      "message": "钱是退到原路还是退到余额里",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.3"
+      ],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.022
+    },
+    {
+      "id": "H31",
+      "message": "退货地址在哪能找到",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "after-sale-process#4.1"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。[refund-policy#3.1]",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.021
+    },
+    {
+      "id": "H32",
+      "message": "定做的窗帘能不能七天无理由退啊，尺寸是我自己量的，装上以后发现颜色跟图片差太多了",
+      "gold_intent": "POLICY",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [
+        "refund-policy#3.2"
+      ],
+      "expect_no_order": false,
+      "intent": "POLICY",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.88,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "自签收次日起七天内，商品完好可申请无理由退货；已发货或已签收可申请退货退款。仅退款只适用于未发货订单。[refund-policy#3.1]",
+      "citations": [
+        "refund-policy#3.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.025
+    },
+    {
+      "id": "H33",
+      "message": "订单备注写错了能不能改一下",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.55,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.019
+    },
+    {
+      "id": "H34",
+      "message": "O1005我这单有点问题，你帮我看看咋回事",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O1005",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": "O1005",
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您关于订单 O1005 的问题。请补充具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.02
+    },
+    {
+      "id": "H35",
+      "message": "你们支持货到付款吗，我妈不会用网上支付，想收到货再给钱，这样行不行啊",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.022
+    },
+    {
+      "id": "H36",
+      "message": "O9999这个订单不太对劲，你帮我看下",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": "O9999",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": "O9999",
+      "confidence": 0.55,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您关于订单 O9999 的问题。请补充具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.02
+    },
+    {
+      "id": "H37",
+      "message": "会员积分能当钱花吗，一般抵多少",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.018
+    },
+    {
+      "id": "H38",
+      "message": "刚才下单优惠券忘了点，我想重新下一单行不行，旧的这单能不能先取消掉，别到时候发两份过来",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.022
+    },
+    {
+      "id": "H39",
+      "message": "我是帮我妈买的，她不会弄这些，售后要怎么操作啊",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.019
+    },
+    {
+      "id": "H40",
+      "message": "页面上写的活动和下单价格对不上，帮我看看",
+      "gold_intent": "OTHER",
+      "gold_transfer_reason": null,
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.018
+    },
+    {
+      "id": "H41",
+      "message": "转人工",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "USER_REQUESTED",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "USER_REQUESTED",
+      "order_no": null,
+      "confidence": 0.97,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已转接人工客服，请稍候。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H42",
+      "message": "别让机器人答了，给我找个真人客服",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "USER_REQUESTED",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "USER_REQUESTED",
+      "order_no": null,
+      "confidence": 0.97,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已转接人工客服，请稍候。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.016
+    },
+    {
+      "id": "H43",
+      "message": "O1002这事我跟机器人说不明白，叫个活人来",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "USER_REQUESTED",
+      "gold_order_no": "O1002",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": "O1002",
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您关于订单 O1002 的问题。请补充具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.02
+    },
+    {
+      "id": "H44",
+      "message": "O1007我要换个颜色，不退款，就换货，白色换成灰色，运费我自己出也行",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "OUT_OF_SCOPE",
+      "gold_order_no": "O1007",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "REFUND_REQUEST",
+      "transfer_reason": null,
+      "order_no": "O1007",
+      "confidence": 0.92,
+      "reply_type": "DECISIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "订单 O1007，已签收，实付 ¥66.00，可退 ¥66.00。已记录您的退款诉求，需坐席确认后生效（演示环境，未真实退款）。",
+      "citations": [
+        "refund-policy#3.1",
+        "return-shipping#2.1"
+      ],
+      "policy_version": "2026-11",
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": 6600,
+      "latency_ms": 0.031
+    },
+    {
+      "id": "H45",
+      "message": "快递把东西摔坏了，你们得赔我，至少赔一半，照片我都拍了，包装都烂了，里面杯子碎了两个",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "OUT_OF_SCOPE",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "OUT_OF_SCOPE",
+      "order_no": null,
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已记录您的诉求，将转交人工专员处理。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.021
+    },
+    {
+      "id": "H46",
+      "message": "O1001给我开张发票，抬头写公司名，税号我待会儿发你，能开专票吗",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "OUT_OF_SCOPE",
+      "gold_order_no": "O1001",
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "OUT_OF_SCOPE",
+      "order_no": "O1001",
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已记录您的诉求，将转交人工专员处理。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.017
+    },
+    {
+      "id": "H47",
+      "message": "再不给我处理我就去12315投诉，还得发到网上，你们这态度真是服了，都拖了一个星期了",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "OUT_OF_SCOPE",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "OUT_OF_SCOPE",
+      "order_no": null,
+      "confidence": 0.98,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已记录您的诉求，将转交人工专员处理。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.012
+    },
+    {
+      "id": "H48",
+      "message": "O1001和O1005这两个都给我退了",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "AMBIGUOUS_ORDER",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "HANDOFF",
+      "transfer_reason": "AMBIGUOUS_ORDER",
+      "order_no": null,
+      "confidence": 0.95,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "检测到多个订单号，请只提供一个订单号，或由人工协助确认。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.015
+    },
+    {
+      "id": "H49",
+      "message": "你们公司今年营收多少啊，规模多大，是不是快上市了",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "NO_EVIDENCE",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "OTHER",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.42,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": true,
+      "degraded": false,
+      "reply_draft": "已收到您的问题。请补充订单号和具体诉求，由坐席进一步核实。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.104
+    },
+    {
+      "id": "H50",
+      "message": "能不能给我走个内部通道优先发货啊，我认识你们领导，回头让他跟你们说一声",
+      "gold_intent": "HANDOFF",
+      "gold_transfer_reason": "NO_EVIDENCE",
+      "gold_order_no": null,
+      "context_order_no": null,
+      "gold_clauses": [],
+      "expect_no_order": false,
+      "intent": "LOGISTICS",
+      "transfer_reason": null,
+      "order_no": null,
+      "confidence": 0.9,
+      "reply_type": "INFORMATIONAL",
+      "need_human_review": false,
+      "degraded": false,
+      "reply_draft": "请提供订单号，我帮您核实订单状态和物流信息。",
+      "citations": [],
+      "policy_version": null,
+      "provider": "scripted",
+      "prompt_version": "p1.0.0",
+      "amount_cents": null,
+      "latency_ms": 0.021
+    }
+  ]
+}

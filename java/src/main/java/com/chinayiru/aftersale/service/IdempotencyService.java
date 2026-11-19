@@ -44,6 +44,11 @@ public class IdempotencyService {
         return Hashing.sha256Hex(json.write(request));
     }
 
+    /**
+     * 202 也按终态缓存：BOUNDARY/openapi 规定"同一 requestId 重复提交返回原受理结果（仍为 202），
+     * 不得重复批准或执行"。因此未完成的执行不靠重放同一 requestId 推进——AgentService 允许在
+     * CONFIRMED 状态下换新 requestId 重试执行。
+     */
     public ResponseEntity<?> execute(String userId, String endpoint, String targetId, String requestId,
                                      String requestHash, Supplier<ResponseEntity<?>> action) {
         IdempotencyRecord existing = find(userId, endpoint, targetId, requestId);
@@ -88,7 +93,8 @@ public class IdempotencyService {
 
         try {
             ResponseEntity<?> response = action.get();
-            store(userId, endpoint, targetId, requestId, response.getStatusCode().value(), response.getBody(), null);
+            int status = response.getStatusCode().value();
+            store(userId, endpoint, targetId, requestId, status, response.getBody(), null);
             return response;
         } catch (ApiException ex) {
             if (ex.getCode().httpStatus() >= 500) {

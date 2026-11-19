@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import os
 from typing import Any
+
+# app.main 在 import 时就会创建模块级 app，因此必须在导入前注入测试密钥。
+TEST_SECRET = "test-secret-0123456789abcdef0123456789"
+os.environ.setdefault("AFTERSALE_HMAC_SECRET", TEST_SECRET)
 
 import pytest
 from fastapi.testclient import TestClient
@@ -132,7 +137,7 @@ class FakeTools:
 def settings() -> Settings:
     return Settings(
         java_base_url="http://localhost:8080",
-        hmac_secret="test-secret",
+        hmac_secret=TEST_SECRET,
         tool_timeout_seconds=1.0,
         tool_retries=1,
         confidence_threshold=0.60,
@@ -157,9 +162,9 @@ def client(settings: Settings, fake_tools: FakeTools) -> TestClient:
 
 @pytest.fixture()
 def auth(settings: Settings):
-    def headers(user_id: str = "U001") -> dict[str, str]:
+    def headers(user_id: str = "U001", role: str = "agent") -> dict[str, str]:
         return {
-            "X-Internal-Identity": issue_identity(user_id, "agent", settings.hmac_secret),
+            "X-Internal-Identity": issue_identity(user_id, role, settings.hmac_secret),
             "X-Trace-Id": "trace-test",
         }
 

@@ -25,6 +25,8 @@ curl.exe http://127.0.0.1:8000/healthz
 
 Python 调用 Java 的 `/internal/tools/queryOrder` 与 `/internal/tools/getLogistics`，Java 调用本服务的 `/internal/agent/ask`。两边共用 `app.security.hmac-secret` / `AFTERSALE_HMAC_SECRET`。
 
+身份边界：`/internal/agent/ask` 先验 `X-Internal-Identity` 的 HMAC，再要求“签名里的 `userId` == 请求体 `userId`”，不一致直接 403 `FORBIDDEN_SCOPE`；后续工具调用只使用签名里的 `userId`。Python 角色也不能反过来调用 Agent。
+
 ```powershell
 # 1) 启动 Java（HTTP 模式）
 cd H:\电商工单ai\java
@@ -32,7 +34,7 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --app.agent.mode=http
 
 # 2) 启动 Python
 cd H:\电商工单ai\python
-$env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"
+$env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -53,7 +55,7 @@ app:
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `AFTERSALE_JAVA_BASE_URL` | `http://localhost:8080` | Java 工具服务地址 |
-| `AFTERSALE_HMAC_SECRET` | `dev-only-hmac-secret-change-me-please` | 内部 HMAC 共享密钥 |
+| `AFTERSALE_HMAC_SECRET` | **无，必填** | 内部 HMAC 共享密钥；至少 32 字符，缺失/过短拒绝启动；须与 Java `app.security.hmac-secret` 一致 |
 | `AFTERSALE_TOOL_TIMEOUT_SECONDS` | `1.0` | 单次工具调用超时 |
 | `AFTERSALE_TOOL_RETRIES` | `1` | 超时/503/504 重试次数 |
 | `AFTERSALE_CONFIDENCE_THRESHOLD` | `0.60` | 低置信阈值 |
@@ -129,10 +131,12 @@ base64url(JSON{"userId","role","exp","nonce"}) + "." + base64url(HMAC_SHA256(pay
 - 工具超时或 503/504：重试 1 次，仍失败 → `HANDOFF(TOOL_FAILED)` + `degraded=true`。
 - 响应 `replyDraft` 不超过 200 字，不含“赔付 / 保证 / 已退款”等禁用表述。
 - 无命中模糊文本 → `OTHER` + `confidence=0.42` + `needHumanReview=true`，有效订单仍给安全草稿。
+- ask 未捕获异常统一返回 500 契约体 `AGENT_UNAVAILABLE`（带 `traceId`、`retryable=true`），Java 侧按 Agent 不可用兜底转人工；不会把框架默认 500 页面暴露给调用方。
+- `context.orderNo` 最长 32 字符，超长直接 422，避免异常单号进入知识检索或草稿。
 
 ## 测试
 
-`tests/test_agent.py` 覆盖 21 个场景：鉴权、签名/nonce 重放、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
+`tests/test_agent.py` 覆盖 28 个场景：鉴权、签名/nonce 重放、跨端点重放、body `userId` 与签名身份不一致 403、Python 角色越权 403、缺失/过短密钥启动失败、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全、内部异常契约体、订单号长度上限与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
 
 ## 目录
 

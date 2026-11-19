@@ -1,0 +1,8 @@
+.....................                                                    [100%]
+============================== warnings summary ===============================
+..\python-deps\fastapi\testclient.py:1
+  C:\Users\18240\Documents\ChatGPT\电商工单\复跑测试_2026-11-17_111501\python-deps\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\18240\Documents\ChatGPT\电商工单\复跑测试_2026-11-17_111501\logs\python-junit.xml -

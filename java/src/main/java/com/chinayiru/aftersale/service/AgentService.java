@@ -19,6 +19,7 @@ import com.chinayiru.aftersale.domain.AuditLog;
 import com.chinayiru.aftersale.domain.Draft;
 import com.chinayiru.aftersale.domain.ExecutionState;
 import com.chinayiru.aftersale.domain.ExecutionTask;
+import com.chinayiru.aftersale.domain.IntentType;
 import com.chinayiru.aftersale.domain.MessageRole;
 import com.chinayiru.aftersale.domain.Ticket;
 import com.chinayiru.aftersale.domain.TicketMessage;
@@ -57,13 +58,15 @@ public class AgentService {
     private final TicketViewMapper viewMapper;
     private final IdempotencyService idempotency;
     private final GenerationService generationService;
+    private final SimulatedExecutor executor;
     private final JsonCodec json;
     private final TransactionTemplate tx;
 
     public AgentService(TicketMapper ticketMapper, MessageMapper messageMapper, DraftMapper draftMapper,
                         ToolCallMapper toolCallMapper, ExecutionTaskMapper executionTaskMapper,
                         AuditMapper auditMapper, TicketViewMapper viewMapper, IdempotencyService idempotency,
-                        GenerationService generationService, JsonCodec json, TransactionTemplate tx) {
+                        GenerationService generationService, SimulatedExecutor executor,
+                        JsonCodec json, TransactionTemplate tx) {
         this.ticketMapper = ticketMapper;
         this.messageMapper = messageMapper;
         this.draftMapper = draftMapper;
@@ -73,6 +76,7 @@ public class AgentService {
         this.viewMapper = viewMapper;
         this.idempotency = idempotency;
         this.generationService = generationService;
+        this.executor = executor;
         this.json = json;
         this.tx = tx;
     }
@@ -86,12 +90,19 @@ public class AgentService {
 
     public ResponseEntity<?> send(String ticketId, SendRequest request) {
         requireTicket(ticketId);
+        // 202 按契约作为该 requestId 的受理结果缓存（不得重复批准或执行）；
+        // 推进未完成的执行必须在 CONFIRMED 状态下换新 requestId 重试，见 retryExecution。
         return idempotency.execute("agent", "POST /api/agent/send", ticketId, request.requestId(),
                 idempotency.hash(request), () -> doSend(ticketId, request));
     }
 
     private ResponseEntity<?> doSend(String ticketId, SendRequest request) {
         Ticket ticket = requireTicket(ticketId);
+        // 上次已确认但执行段失败（返回 202）的工单停在这里：允许重试执行，
+        // 不再重复确认、不重复写坐席回复，否则工单会永久卡死在 CONFIRMED。
+        if (ticket.getState() == TicketState.CONFIRMED) {
+            return retryExecution(ticket, request);
+        }
         // 守卫顺序与契约 §7.2 一致：状态 → 版本 → 草稿版本 → 政策快照 → 金额 → 复核说明 → 内部码。
         // 任何一步失败都必须抛错，不能留下半确认状态。
         if (!TicketState.SEND_FROM.contains(ticket.getState())) {
@@ -113,6 +124,10 @@ public class AgentService {
         }
         SuggestedAction action = json.read(draft.getSuggestedActionJson(), SuggestedAction.class);
         Long amount = action == null ? null : action.amountCents();
+        // 退款草稿不能“没有金额也能确认”：空金额既无法校验硬上限，也会生成一笔金额不明的执行。
+        if (draft.getIntent() == IntentType.REFUND_REQUEST && amount == null) {
+            throw new ApiException(ErrorCode.POLICY_REJECTED, "退款草稿缺少金额，请重新生成或转人工");
+        }
         if (amount != null) {
             if (policy.maxRefundableCents() == null || amount > policy.maxRefundableCents()) {
                 throw new ApiException(ErrorCode.POLICY_REJECTED, "建议金额超过可退上限");
@@ -132,7 +147,7 @@ public class AgentService {
 
         // 第一段事务：确认工单 + 写入坐席回复 + 持久化待执行任务。
         // 先落库再执行，才能在执行阶段失败时返回 202 并保留可重试依据。
-        Ticket confirmed = tx.execute(status -> {
+        tx.execute(status -> {
             int rows = ticketMapper.transition(ticketId, ticket.getVersion(),
                     Set.of(ticket.getState().name()), TicketState.CONFIRMED,
                     null, false, false, null, null, false, TimeUtil.now());
@@ -140,46 +155,84 @@ public class AgentService {
                 throw new ApiException(ErrorCode.STALE_STATE, "工单已被更新，请刷新后重试");
             }
             addMessage(ticketId, MessageRole.AGENT, request.text());
-
-            ExecutionTask task = new ExecutionTask();
-            task.setTaskId(UUID.randomUUID().toString());
-            task.setTicketId(ticketId);
-            task.setRequestId(request.requestId());
-            task.setState(ExecutionState.PENDING);
-            task.setAttempts(0);
-            task.setCreatedAt(TimeUtil.now());
-            task.setUpdatedAt(TimeUtil.now());
-            executionTaskMapper.insert(task);
-
+            executionTaskMapper.insert(newTask(ticketId, request.requestId()));
             audit(ticketId, "SENT", "edited=" + edited + ", editDistance=" + distance
                     + ", reviewNote=" + (request.reviewNote() == null ? "" : request.reviewNote()), null);
-            return ticketMapper.findById(ticketId);
+            return null;
         });
 
-        // 第二段事务模拟外部执行：CONFIRMED → EXECUTING → CLOSED。
-        // 执行失败时保留 CONFIRMED、任务标 FAILED，并返回 202，客户端可凭同一 requestId 重试。
+        return runExecution(ticketId, request, draft.getDraftVersion(), edited, distance);
+    }
+
+    /**
+     * 202 之后的收尾执行入口：工单已是 CONFIRMED，确认段已经落库，
+     * 这里只补一次执行（换 requestId 重试时补一条任务，保证审计链完整）。
+     */
+    private ResponseEntity<?> retryExecution(Ticket ticket, SendRequest request) {
+        String ticketId = ticket.getTicketId();
+        if (ticket.getVersion() != request.expectedVersion()) {
+            throw new ApiException(ErrorCode.STALE_STATE, "工单已被更新，请刷新后重试");
+        }
+        if (executionTaskMapper.findByTicketAndRequest(ticketId, request.requestId()) == null) {
+            tx.execute(status -> {
+                executionTaskMapper.insert(newTask(ticketId, request.requestId()));
+                return null;
+            });
+        }
+        Draft draft = draftMapper.findLatestActive(ticketId);
+        int distance = draft == null ? 0 : editDistance(draft.getReplyDraft(), request.text());
+        int draftVersion = draft == null ? request.draftVersion() : draft.getDraftVersion();
+        audit(ticketId, "EXECUTION_RETRY", "requestId=" + request.requestId(), null);
+        return runExecution(ticketId, request, draftVersion, distance > 0, distance);
+    }
+
+    /**
+     * 第二段事务模拟外部执行：CONFIRMED → EXECUTING → CLOSED。
+     * 执行失败时事务整体回滚、保留 CONFIRMED、任务标 FAILED，并返回 202：
+     * 客户端读取返回的 version 后可换新 requestId 重新调用 send 继续执行。
+     */
+    private ResponseEntity<?> runExecution(String ticketId, SendRequest request,
+                                           int draftVersion, boolean edited, int distance) {
         try {
             Ticket closed = tx.execute(status -> {
-                move(confirmed, TicketState.CONFIRMED, TicketState.EXECUTING, null, false, false);
+                move(requireTicket(ticketId), TicketState.CONFIRMED, TicketState.EXECUTING, null, false, false);
+                // 真正的执行点：失败会抛出，事务回滚，工单留在 CONFIRMED。
+                executor.execute(ticketId, request.requestId());
                 ExecutionTask task = executionTaskMapper.findByTicketAndRequest(ticketId, request.requestId());
                 if (task != null) {
                     executionTaskMapper.markDone(task.getTaskId(), TimeUtil.now());
                 }
                 addMessage(ticketId, MessageRole.AGENT, "退款申请已受理（演示环境，未真实退款）。");
-                move(ticketMapper.findById(ticketId), TicketState.EXECUTING, TicketState.CLOSED, null, false, true);
+                move(ticketMapper.findById(ticketId), TicketState.EXECUTING, TicketState.CLOSED,
+                        null, false, true);
                 audit(ticketId, "EXECUTED", "SIMULATED", null);
                 return ticketMapper.findById(ticketId);
             });
             return ResponseEntity.ok(new SendResult(closed.getState().name(), edited, distance,
-                    draft.getDraftVersion()));
+                    draftVersion, closed.getVersion()));
         } catch (RuntimeException ex) {
             ExecutionTask task = executionTaskMapper.findByTicketAndRequest(ticketId, request.requestId());
             if (task != null) {
-                executionTaskMapper.markFailed(task.getTaskId(), ErrorCode.PERSISTENCE_FAILED.name(), TimeUtil.now());
+                executionTaskMapper.markFailed(task.getTaskId(), ErrorCode.PERSISTENCE_FAILED.name(),
+                        TimeUtil.now());
             }
+            Ticket current = ticketMapper.findById(ticketId);
             return ResponseEntity.status(202)
-                    .body(new SendResult(TicketState.CONFIRMED.name(), edited, distance, draft.getDraftVersion()));
+                    .body(new SendResult(TicketState.CONFIRMED.name(), edited, distance,
+                            draftVersion, current == null ? 0 : current.getVersion()));
         }
+    }
+
+    private ExecutionTask newTask(String ticketId, String requestId) {
+        ExecutionTask task = new ExecutionTask();
+        task.setTaskId(UUID.randomUUID().toString());
+        task.setTicketId(ticketId);
+        task.setRequestId(requestId);
+        task.setState(ExecutionState.PENDING);
+        task.setAttempts(0);
+        task.setCreatedAt(TimeUtil.now());
+        task.setUpdatedAt(TimeUtil.now());
+        return task;
     }
 
     public ResponseEntity<?> regenerate(String ticketId, RegenerateRequest request) {
@@ -246,6 +299,9 @@ public class AgentService {
                     }
                     if (ticket.getVersion() != request.expectedVersion()) {
                         throw new ApiException(ErrorCode.STALE_STATE, "工单已被更新，请刷新后重试");
+                    }
+                    if (containsInternalCode(request.text())) {
+                        throw new ApiException(ErrorCode.INVALID_ARGS, "回复正文不能包含内部状态或字段名");
                     }
                     Ticket after = tx.execute(status -> {
                         addMessage(ticketId, MessageRole.AGENT, request.text());

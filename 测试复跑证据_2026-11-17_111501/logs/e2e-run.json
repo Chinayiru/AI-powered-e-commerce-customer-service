@@ -1,0 +1,8 @@
+{
+  "python_url": "http://127.0.0.1:18000",
+  "java_url": "http://127.0.0.1:18080",
+  "python_pid": 41596,
+  "java_pid": 19664,
+  "exit_code": 0,
+  "services_stopped": true
+}
