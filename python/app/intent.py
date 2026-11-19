@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 
 from .contracts import Intent, TransferReason
 
+RULES_VERSION = "intent-v1.1.0"
+
 
 @dataclass(frozen=True)
 class IntentResult:
@@ -63,7 +65,8 @@ _OUT_OF_SCOPE = (
 )
 
 _REFUND_ACTION = re.compile(
-    r"(帮我|给我|我要|我想|麻烦|直接|那就|就|请|申请|要求|安排|办理).{0,6}"
+    r"(帮我|给我|我要|我想|麻烦|直接|那就|就|请|申请|要求|安排|办理)"
+    r"(?:帮我|给我|提交|办理|申请|处理|取消并|直接|全额|部分|一下|把|这单|订单|商品|进行){0,3}"
     r"(退|退款|退钱|退货退款|退掉|退了)"
     r"|退了吧|退款吧|退掉|退了|不想要了|退钱|我要退|想退"
     r"|退不了.{0,8}转人工"
@@ -72,33 +75,49 @@ _REFUND_ACTION = re.compile(
 _POLICY = re.compile(
     r"运费|谁出|谁承担|规则|政策|时效|流程|材料|需要什么|怎么退|如何退"
     r"|退款多久|几天到账|多久到账|到账|从哪天|无理由|退货地址|退款到哪"
+    r"|原路|原支付|银行卡|余额|退回.{0,4}账户|退到.{0,4}账户|退款.{0,5}渠道"
+    r"|退货.{0,6}寄到|退货.{0,6}地址"
 )
 
 _LOGISTICS = re.compile(
     r"物流|快递|发货|没收到|催一下|催|签收|包裹|运单|配送|派送"
     r"|到哪|到哪了|一直没到|怎么还没到|多久能到|什么时候到"
+    r"|什么时候.{0,3}发|何时.{0,3}发|发出来|出库|送到"
 )
 
 _ELIGIBILITY = re.compile(
-    r"能退|可以退|可退|还能退|退吗|能不能退|退货|退换|拆封|拆了|用了"
-    r"|超过.{0,3}天|没拆|不合适"
+    r"(?:能不能|可不可以|是否|能否|可否|还能|能|可以|可)"
+    r"(?:再|还|继续|给我|为我|申请|办理|直接|全额|部分|可以|能|以){0,3}(?:退款|退货|退钱|退)"
+    r"|(?:退款|退货|退了|退钱|退).{0,8}(?:会不会|要不要|资格|限制|需要.{0,4}吗)"
+    r"|(?:退款|退货|退钱|退)[吗不](?:[？?]|$|[，。])"
+    r"|(?:如果|假如).{0,4}(?:退款|退货|退).{0,8}(?:扣|费用|影响)"
+    r"|拆封|拆了|用了|没拆|不合适"
 )
 
 _CONDITIONAL = re.compile(r"能退的话|退得了的话|可以退的话|能退就|退不了.{0,8}转人工")
 
-# "我想退款，怎么办？" is a question about eligibility, not an instruction to
-# execute a refund. Keep it informational; an explicit "帮我退了吧" stays a
-# REFUND_REQUEST.
-_REFUND_QUESTION = re.compile(
-    r"怎么办|怎么退|如何退|能否|可以吗|能吗|行吗|吗[?？]?\s*$"
+# Remove denied/reported/completed refund phrases before matching actions.
+# Keep the rest of the sentence: "不用退钱，帮我查物流" is still logistics.
+_NEGATED_REFUND = re.compile(
+    r"(?:不想|不需要|不打算|不准备|不要|不用|无需|别|不是|并非|不能|不给|不让|无法)"
+    r"[^，。！？,!?;；]{0,10}?(?:退款申请|退货退款|退款|退钱|退货|退掉|退了|退)"
+    r"|(?:取消|撤销)(?:这次|本次|我的|这笔)?(?:退款申请|退款|退货)"
 )
+_COMPLETED_REFUND = re.compile(
+    r"(?:已经|已|之前|刚才)(?:成功|完成|给我|帮我|全额|部分)?(?:退了钱|退款成功|退款|退钱|退了)"
+)
+_PROCESS_QUESTION = re.compile(r"怎么办|怎么退|如何退")
+_EXPLICIT_INSTRUCTION = re.compile(r"帮我|给我|请.{0,4}(?:退|办理|提交)|麻烦|申请|要求|直接|退了吧|退款吧")
+
+# A bare desire followed by a question stays informational. Explicit
+# instructions such as "帮我提交退款，可以吗" remain refund requests.
+_REFUND_QUESTION = re.compile(r"能否|可以吗|能吗|行吗|吗[?？]?\s*$")
 
 _ORDER = re.compile(r"(?i)(?<![A-Z0-9])O\d{4,8}(?![A-Z0-9])")
 
 
 def classify(message: str) -> IntentResult:
     text = (message or "").strip()
-    lower = text.lower()
 
     if any(word in text for word in _SAFETY):
         return IntentResult(
@@ -108,16 +127,10 @@ def classify(message: str) -> IntentResult:
             out_of_scope=True,
         )
 
-    refund_request = bool(_REFUND_ACTION.search(text))
     conditional = bool(_CONDITIONAL.search(text))
-
-    if refund_request and _REFUND_QUESTION.search(text):
-        return IntentResult(Intent.REFUND_ELIGIBILITY, 0.88, conditional=conditional)
-
-    if refund_request:
-        return IntentResult(Intent.REFUND_REQUEST, 0.92, conditional=conditional)
-
-    if any(word in text for word in _HUMAN):
+    # "退不了就转人工" describes a conditional refund request. A direct
+    # human request otherwise takes precedence over a refund keyword.
+    if any(word in text for word in _HUMAN) and not conditional:
         return IntentResult(
             Intent.HANDOFF,
             0.97,
@@ -132,14 +145,28 @@ def classify(message: str) -> IntentResult:
             out_of_scope=True,
         )
 
-    if _POLICY.search(text):
+    if conditional:
+        return IntentResult(Intent.REFUND_REQUEST, 0.92, conditional=True)
+
+    active_text = _COMPLETED_REFUND.sub("", _NEGATED_REFUND.sub("", text))
+    refund_request = bool(_REFUND_ACTION.search(active_text))
+    explicit_instruction = bool(_EXPLICIT_INSTRUCTION.search(active_text))
+
+    # Questions about an order's eligibility beat incidental shipment/fee
+    # words. "可以吗" following an actual instruction is only politeness.
+    if (_ELIGIBILITY.search(active_text)
+            or refund_request and _PROCESS_QUESTION.search(active_text)
+            or refund_request and _REFUND_QUESTION.search(active_text) and not explicit_instruction):
+        return IntentResult(Intent.REFUND_ELIGIBILITY, 0.88)
+
+    if refund_request:
+        return IntentResult(Intent.REFUND_REQUEST, 0.92)
+
+    if _POLICY.search(active_text):
         return IntentResult(Intent.POLICY, 0.88)
 
-    if _LOGISTICS.search(text):
+    if _LOGISTICS.search(active_text):
         return IntentResult(Intent.LOGISTICS, 0.90)
-
-    if _ELIGIBILITY.search(text):
-        return IntentResult(Intent.REFUND_ELIGIBILITY, 0.90)
 
     if "订单" in text or "单号" in text:
         return IntentResult(Intent.OTHER, 0.55)

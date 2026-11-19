@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 阶段 | Java 26 项、Python 21 项、HTTP 冒烟 26 项通过；工程通过、指标未闭合、整体未验收 |
+| 阶段 | Python 91 项本地回归通过；2026-11-19 QC02 87.5%（35/40）过线；QC05 待人工，整体未验收。Java/HTTP 结果见各次归档 |
 | 契约版本 | `BOUNDARY_v1` **v1.4.1** ↔ `openapi.yaml` **v1.5.2**（版本独立演进；对应关系与文件指纹见 `docs/contract-snapshot.json`） |
 | 执行模式 | `SIMULATED`（演示不碰真实资金） |
 | 技术栈 | Java 17 + Spring Boot 3.3.5 + MyBatis + H2/MySQL；Python 3.12 + FastAPI + Pydantic v2（规则式 Agent，未接 LangGraph/LLM） |
@@ -32,7 +32,7 @@
 │   └── README.md             启动、接口冒烟、实现取舍、测试映射
 ├── python/                   FastAPI 只读 AI 层
 │   ├── app/                  契约、意图/槽位、检索、工具客户端、草稿
-│   ├── tests/                pytest（28 用例）
+│   ├── tests/                pytest（91 用例：原 28 + 开发集 60 + 门禁 3）
 │   └── README.md             启动、环境变量、与 Java 联调、规则说明
 └── README.md
 ```
@@ -81,7 +81,7 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # 另开终端：Python AI 层
 cd python
 pip install -r requirements.txt
-python -m pytest -q         # 28 个 pytest
+python -m pytest -q         # 91 个 pytest
 $env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
@@ -115,8 +115,8 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 | 指标 | 状态 |
 | --- | --- |
 | Java M-S 集成测试 | 50/50 通过（H2），含启动密钥红线、内部身份越权/重放、执行失败重试、咨询转售后回归、退款草稿缺金额拒发、签收时间缺失/金额缺失政策拦截与生成异常兜底；未做线程级并发压测 |
-| Python AI 单元测试 | 28/28 通过（规则式桩，FakeTools），含身份 userId 一致性、角色边界、缺失密钥启动失败、内部异常契约体与订单号长度上限；未接真实 LLM |
-| 意图准确率 / 槽位 F1 / 引用精确率 | 2026-11-17 holdout：意图准确率 75%（门槛 85%，未达标）、订单号召回 100%；草稿可用率待双评 |
+| Python AI 单元测试 | 2026-11-19 本地 91/91 通过（规则式桩，FakeTools）；含原 28 项、60 条开发集回归和 3 项门禁边界/计数校验；未接真实 LLM |
+| 意图准确率 / 槽位 F1 / 引用精确率 | 2026-11-19 同一 holdout：QC02 87.5%（35/40，门槛 85%）、订单号召回 100%；草稿可用率待双评。详见 [QC02 修复记录](docs/QC02修复记录_2026-11-19.md) |
 | 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
 | MySQL 真机 | 已在本机 MySQL 8.0.30 验证生成列、唯一索引与 `ON DUPLICATE KEY UPDATE`；未做多实例并发压测 |
 | 延迟 / 成本 | 进程内 P50/P95 0.02/0.05 ms，不含 HTTP/序列化，不可作为系统延迟对外报；规则式成本 0 元 |
@@ -175,6 +175,6 @@ python python\eval\run_eval.py
 python scripts\check_eval_gate.py python\eval\eval_result.json
 ```
 
-QC02 < 85% 时质量门退出 1；当前 75% 会使 CI 的 `QC02 quality gate` 红灯。评测脚本退出 0 只表示产出成功。分支保护应将该检查设为必需项，QC05 人工验收仍需另行完成。
+QC02 < 85% 时质量门退出 1；2026-11-17 的 75% 会被拦截，2026-11-19 本地 `intent-v1.1.0` 的 87.5% 已通过。评测脚本退出 0 只表示产出成功，必须再运行质量门。远端 CI 状态以推送后的实际运行结果为准；QC05 人工验收仍需另行完成。
 
 `测试复跑证据_2026-11-17_111501/` 随仓库长期保留；含依赖的大体积工作区副本仅保留至 2026-11-24，之后可人工清理。

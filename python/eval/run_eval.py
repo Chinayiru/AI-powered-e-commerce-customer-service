@@ -32,6 +32,7 @@ from app.agent import AgentService  # noqa: E402
 from app.config import Settings  # noqa: E402
 from app.contracts import AskRequest, Category, Context, Intent  # noqa: E402
 from app.knowledge import CHUNKS  # noqa: E402
+from app.intent import RULES_VERSION  # noqa: E402
 
 INTENTS = ("REFUND_REQUEST", "REFUND_ELIGIBILITY", "LOGISTICS", "POLICY", "OTHER")
 BANNED = ("赔付", "赔偿", "保证", "一定", "百分百", "已退款", "已处理", "已改地址")
@@ -422,6 +423,7 @@ def qc11_version(dataset: Path) -> dict[str, Any]:
         "dataset_sha256": digest,
         "policy_version": "2026-11",
         "prompt_version": "p1.0.0",
+        "rules_version": RULES_VERSION,
         "provider": "scripted",
         "python_version": sys.version.split()[0],
         "harness": "eval/run_eval.py",

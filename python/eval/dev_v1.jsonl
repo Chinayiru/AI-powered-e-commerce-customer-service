@@ -1,0 +1,60 @@
+{"id":"D01","message":"O1001 这单买重了，请取消并退款。","gold_intent":"REFUND_REQUEST"}
+{"id":"D02","message":"O1001 暂时用不上了，我想退钱。","gold_intent":"REFUND_REQUEST"}
+{"id":"D03","message":"O1001 还没出库，麻烦办理退款。","gold_intent":"REFUND_REQUEST"}
+{"id":"D04","message":"O1001 我决定不要这件商品了，申请退款。","gold_intent":"REFUND_REQUEST"}
+{"id":"D05","message":"O1001 发货太慢，我不等了，帮我退掉。","gold_intent":"REFUND_REQUEST"}
+{"id":"D06","message":"O1001 要是能退的话，就帮我退款吧。","gold_intent":"REFUND_REQUEST","conditional":true}
+{"id":"D07","message":"O1001 退得了的话直接退了吧。","gold_intent":"REFUND_REQUEST","conditional":true}
+{"id":"D08","message":"O1001 退不了就转人工。","gold_intent":"REFUND_REQUEST","conditional":true}
+{"id":"D09","message":"O1001 不用查快递了，直接给我退款。","gold_intent":"REFUND_REQUEST"}
+{"id":"D10","message":"O1001 麻烦帮我提交退款，可以吗？","gold_intent":"REFUND_REQUEST"}
+{"id":"D11","message":"O1001 包装有点破损，这种情况是否可以退款？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D12","message":"O1001 我已经试穿过，可不可以退？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D13","message":"O1001 快递还在路上，能否申请退款？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D14","message":"O1001 赠送的东西不见了，还能退吗？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D15","message":"O1001 还没发货，如果退款需要扣钱吗？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D16","message":"O1001 退了会不会少退钱？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D17","message":"O1001 假如退货，会不会影响其他商品？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D18","message":"O1001 我担心用了就不给退，这样可以退款吗？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D19","message":"O1001 现在想退款，该怎么办？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D20","message":"O1001 签收已经很久，退款有资格限制吗？","gold_intent":"REFUND_ELIGIBILITY"}
+{"id":"D21","message":"O1002 帮忙查查物流到哪了。","gold_intent":"LOGISTICS"}
+{"id":"D22","message":"O1002 包裹一直停在中转站，是什么情况？","gold_intent":"LOGISTICS"}
+{"id":"D23","message":"O1002 能不能催一下发货？","gold_intent":"LOGISTICS"}
+{"id":"D24","message":"O1002 配送进度有更新吗？","gold_intent":"LOGISTICS"}
+{"id":"D25","message":"O1002 快递单号是多少？","gold_intent":"LOGISTICS"}
+{"id":"D26","message":"O1002 我不想退款，只想查下物流。","gold_intent":"LOGISTICS"}
+{"id":"D27","message":"O1002 不用退钱，帮我催发货。","gold_intent":"LOGISTICS"}
+{"id":"D28","message":"O1002 等了好几天，什么时候能发出来？","gold_intent":"LOGISTICS"}
+{"id":"D29","message":"O1002 商品出库了没有？","gold_intent":"LOGISTICS"}
+{"id":"D30","message":"O1002 还没收到包裹，预计什么时候到？","gold_intent":"LOGISTICS"}
+{"id":"D31","message":"一般退款会退回银行卡还是余额？","gold_intent":"POLICY"}
+{"id":"D32","message":"退款走什么渠道，银行卡需要提供吗？","gold_intent":"POLICY"}
+{"id":"D33","message":"退款什么时候能到账？","gold_intent":"POLICY"}
+{"id":"D34","message":"退货运费的承担规则是什么？","gold_intent":"POLICY"}
+{"id":"D35","message":"无理由退货的七天怎么算？","gold_intent":"POLICY"}
+{"id":"D36","message":"售后流程要准备什么材料？","gold_intent":"POLICY"}
+{"id":"D37","message":"能介绍一下退款申请流程吗？","gold_intent":"POLICY"}
+{"id":"D38","message":"退款退到哪个账户？","gold_intent":"POLICY"}
+{"id":"D39","message":"我想了解退款到账时效，并不是让你帮我退款。","gold_intent":"POLICY"}
+{"id":"D40","message":"退货需要寄到什么地址？","gold_intent":"POLICY"}
+{"id":"D41","message":"你们几点下班？","gold_intent":"OTHER"}
+{"id":"D42","message":"今天的天气怎么样？","gold_intent":"OTHER"}
+{"id":"D43","message":"这个颜色很好看。","gold_intent":"OTHER"}
+{"id":"D44","message":"O1001 我不要退款了。","gold_intent":"OTHER"}
+{"id":"D45","message":"O1001 别帮我退，继续保留订单。","gold_intent":"OTHER"}
+{"id":"D46","message":"O1001 我并不想退款。","gold_intent":"OTHER"}
+{"id":"D47","message":"O1001 撤销退款申请，东西我留着。","gold_intent":"OTHER"}
+{"id":"D48","message":"O1001 不用办理退款，谢谢。","gold_intent":"OTHER"}
+{"id":"D49","message":"O1001 商家说不能退，我只是记录一下。","gold_intent":"OTHER"}
+{"id":"D50","message":"O1001 已经退了钱，这次只是表示感谢。","gold_intent":"OTHER"}
+{"id":"D51","message":"O1001 我要投诉物流，还想退钱。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE"}
+{"id":"D52","message":"O1001 帮我退款，我要找律师。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE"}
+{"id":"D53","message":"O1001 请转人工处理退款。","gold_intent":"HANDOFF","gold_transfer_reason":"USER_REQUESTED"}
+{"id":"D54","message":"O1001 我要人工客服，不要机器人退款。","gold_intent":"HANDOFF","gold_transfer_reason":"USER_REQUESTED"}
+{"id":"D55","message":"O1001 请帮我改地址。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE"}
+{"id":"D56","message":"O1001 我想换货，不是退款。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE"}
+{"id":"D57","message":"O1001 有人身安全问题，麻烦退款。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE"}
+{"id":"D58","message":"O1001 能退就退了吧，不行再转人工。","gold_intent":"REFUND_REQUEST","conditional":true}
+{"id":"D59","message":"O1001和O1002 我要举报你们。","gold_intent":"HANDOFF","gold_transfer_reason":"OUT_OF_SCOPE","agent_only":true}
+{"id":"D60","message":"O1001和O1002 都想退款。","gold_intent":"HANDOFF","gold_transfer_reason":"AMBIGUOUS_ORDER","agent_only":true}
