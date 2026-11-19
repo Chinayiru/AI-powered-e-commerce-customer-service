@@ -6,6 +6,7 @@ from typing import Any
 # app.main 在 import 时就会创建模块级 app，因此必须在导入前注入测试密钥。
 TEST_SECRET = "test-secret-0123456789abcdef0123456789"
 os.environ.setdefault("AFTERSALE_HMAC_SECRET", TEST_SECRET)
+os.environ.setdefault("AFTERSALE_JAVA_BASE_URL", "http://localhost:8080")
 
 import pytest
 from fastapi.testclient import TestClient

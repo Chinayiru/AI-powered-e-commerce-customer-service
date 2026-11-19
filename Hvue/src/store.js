@@ -2,13 +2,15 @@
  * 浏览器侧轻量会话存储。
  *
  * 工单 token 只保存在当前浏览器，用来恢复“我的工单”；它不替代服务端鉴权。
- * 坐席 token 默认是演示值，可在坐席页临时修改。
+ * 坐席 token 由使用者输入，仅在当前标签页会话中保存。
  */
 import { reactive, watch } from 'vue'
 
 const TICKETS_KEY = 'hvue.tickets.v1'
 const USER_KEY = 'hvue.user.v1'
 const AGENT_KEY = 'hvue.agentToken.v1'
+// 清除旧版本持久化的令牌；不把它带入新的会话。
+localStorage.removeItem(AGENT_KEY)
 
 function loadTickets() {
   try {
@@ -21,7 +23,7 @@ function loadTickets() {
 
 export const session = reactive({
   userId: localStorage.getItem(USER_KEY) || 'U001',
-  agentToken: localStorage.getItem(AGENT_KEY) || 'demo-agent-token'
+  agentToken: sessionStorage.getItem(AGENT_KEY) || ''
 })
 
 watch(
@@ -30,7 +32,7 @@ watch(
 )
 watch(
   () => session.agentToken,
-  (value) => localStorage.setItem(AGENT_KEY, value)
+  (value) => sessionStorage.setItem(AGENT_KEY, value)
 )
 
 export const tickets = reactive(loadTickets())

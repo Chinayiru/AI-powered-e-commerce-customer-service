@@ -40,7 +40,7 @@ class ApiIntegrationTest {
     @Autowired
     private InternalIdentityService internalIdentity;
 
-    private static final String AGENT_TOKEN = "demo-agent-token";
+    private static final String AGENT_TOKEN = "test-only-agent-fixture-0123456789abcdef";
 
     @BeforeEach
     void cleanDatabase() {

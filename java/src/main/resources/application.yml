@@ -43,8 +43,8 @@ app:
       - U001
       - U002
   security:
-    # 基础配置不提供可用默认密钥；dev/test 的演示值只在对应 profile 中定义。
-    # 其余 profile（含 mysql/prod）启动前必须注入 >=32 字符的 APP_HMAC_SECRET /
+    # 基础配置不提供可用默认密钥；仅 test profile 有合成测试夹具。
+    # dev/mysql/prod 启动前必须注入 >=32 字符的 APP_HMAC_SECRET /
     # APP_AGENT_TOKEN，否则 StartupGuard 直接拒绝启动。
     hmac-secret: ${APP_HMAC_SECRET:}
     agent-token: ${APP_AGENT_TOKEN:}
@@ -70,7 +70,7 @@ app:
     # scripted：Java 内置的确定性桩，替代尚未启动的 Python AI 层，用于 M-S 验收。
     # http：调用 Python /internal/agent/ask（生产/联调）。
     mode: scripted
-    base-url: http://localhost:8000
+    base-url: ${APP_AGENT_BASE_URL:}
     timeout-ms: 8000
     prompt-version: p1.0.0
 

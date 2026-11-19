@@ -17,14 +17,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 import urllib.error
 import urllib.request
 import uuid
-
-AGENT_TOKEN = "demo-agent-token"
-HMAC_SECRET = "dev-only-hmac-secret-change-me-please"
 
 RESULTS: list[tuple[str, bool, str]] = []
 
@@ -71,9 +69,13 @@ def check_single_error(status: int, payload, want_status: int, want_code: str, n
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--java", default="http://127.0.0.1:8080")
-    ap.add_argument("--python", default="http://127.0.0.1:8000")
+    ap.add_argument("--java", default=os.getenv("AFTERSALE_JAVA_BASE_URL"))
+    ap.add_argument("--python", default=os.getenv("APP_AGENT_BASE_URL"))
     args = ap.parse_args()
+    agent_token = os.getenv("APP_AGENT_TOKEN", "")
+    hmac_secret = os.getenv("AFTERSALE_HMAC_SECRET", "")
+    if not args.java or not args.python or len(agent_token) < 32 or len(hmac_secret) < 32:
+        ap.error("请配置服务地址及 APP_AGENT_TOKEN / AFTERSALE_HMAC_SECRET（各至少32字符）")
     java, py = args.java.rstrip("/"), args.python.rstrip("/")
 
     # ---------- 0. health ----------
@@ -100,7 +102,7 @@ def main() -> int:
         "message": "O1001这个我不要了，帮我退了",
         "context": {"orderNo": None, "summary": None, "history": []},
     }
-    identity = issue_identity("system", "system", HMAC_SECRET)
+    identity = issue_identity("U001", "system", hmac_secret)
     status, body = call("POST", f"{py}/internal/agent/ask", ask_body,
                         {"X-Internal-Identity": identity})
     ok = (status == 200 and body.get("intent") == "REFUND_REQUEST"
@@ -124,7 +126,7 @@ def main() -> int:
            f"status={status} state={created.get('displayState')} version={created.get('version')} "
            f"mode={created.get('executionMode')}")
     auth = {"Authorization": f"Bearer {token}"}
-    agent = {"X-Agent-Token": AGENT_TOKEN}
+    agent = {"X-Agent-Token": agent_token}
 
     status, view = call("GET", f"{java}/api/agent/tickets/{ticket_id}", None, agent)
     draft = view.get("draft") or {}

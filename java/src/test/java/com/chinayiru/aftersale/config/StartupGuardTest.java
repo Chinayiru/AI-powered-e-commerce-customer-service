@@ -14,18 +14,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class StartupGuardTest {
 
-    private static final String SAMPLE_HMAC = "dev-only-hmac-secret-change-me-please";
-    private static final String SAMPLE_AGENT = "demo-agent-token";
+    private static final String SAMPLE_HMAC = "test-only-hmac-fixture-0123456789abcdef";
+    private static final String SAMPLE_AGENT = "test-only-agent-fixture-0123456789abcdef";
     private static final String STRONG_HMAC = "hmac-0123456789abcdef0123456789abcd";
     private static final String STRONG_AGENT = "agent-0123456789abcdef0123456789ab";
 
     @Test
-    void devProfileMayUseRepositorySampleSecrets() {
+    void devProfileRejectsRepositoryTestSecrets() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("dev");
 
-        assertThatCode(() -> new StartupGuard(props(SAMPLE_HMAC, SAMPLE_AGENT, false), env).verify())
-                .doesNotThrowAnyException();
+        assertThatThrownBy(() -> new StartupGuard(props(SAMPLE_HMAC, SAMPLE_AGENT, false), env).verify())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("示例密钥");
     }
 
     @Test
@@ -34,6 +35,22 @@ class StartupGuardTest {
         env.setActiveProfiles("test");
 
         assertThatCode(() -> new StartupGuard(props(SAMPLE_HMAC, SAMPLE_AGENT, false), env).verify())
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void devProfileRejectsMissingSecrets() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("dev");
+        assertThatThrownBy(() -> new StartupGuard(props("", "", true), env).verify())
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("未配置");
+    }
+
+    @Test
+    void devProfileAcceptsInjectedSecretsWithDemoIdentity() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("dev");
+        assertThatCode(() -> new StartupGuard(props(STRONG_HMAC, STRONG_AGENT, true), env).verify())
                 .doesNotThrowAnyException();
     }
 

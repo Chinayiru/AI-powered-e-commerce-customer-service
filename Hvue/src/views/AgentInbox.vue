@@ -62,7 +62,8 @@ function openTicket(id = ticketId.value) {
           id="agentToken"
           v-model="session.agentToken"
           class="input"
-          placeholder="demo-agent-token"
+          type="password"
+          placeholder="请输入管理员提供的坐席令牌"
           autocomplete="off"
         />
       </div>
@@ -117,7 +118,7 @@ function openTicket(id = ticketId.value) {
           <div class="panel-head"><h2>进入方式</h2></div>
           <div class="panel-body about-list">
             <div class="about-item"><span>1</span><span>在客户入口用 U001 / U002 建单，记下返回的工单号。</span></div>
-            <div class="about-item"><span>2</span><span>把工单号粘贴到上方，使用演示坐席令牌打开。</span></div>
+            <div class="about-item"><span>2</span><span>把工单号粘贴到上方，输入管理员提供的坐席令牌打开。</span></div>
             <div class="about-item"><span>3</span><span>坐席视图会显示完整状态、草稿、政策校验与工具调用。</span></div>
           </div>
         </section>

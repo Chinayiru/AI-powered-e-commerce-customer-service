@@ -291,10 +291,10 @@ watch(ticketId, load)
       <div class="panel-body grid">
         <div>
           <h2 style="font-size: 16px">需要坐席令牌</h2>
-          <p class="subtitle">默认演示令牌是 demo-agent-token；可在下方修改后重试。</p>
+        <p class="subtitle">请输入管理员提供的坐席令牌后重试。</p>
         </div>
         <div class="form-row">
-          <input v-model="session.agentToken" class="input" placeholder="X-Agent-Token" />
+          <input v-model="session.agentToken" type="password" class="input" placeholder="X-Agent-Token" autocomplete="off" />
           <button class="btn btn--primary" type="button" @click="load">使用该令牌</button>
         </div>
       </div>

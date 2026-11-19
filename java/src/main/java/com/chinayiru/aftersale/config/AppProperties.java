@@ -69,7 +69,7 @@ public class AppProperties {
     @Data
     public static class Agent {
         private String mode = "scripted";
-        private String baseUrl = "http://localhost:8000";
+        private String baseUrl;
         private int timeoutMs = 8000;
         private String promptVersion = "p1.0.0";
     }

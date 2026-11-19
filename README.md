@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 阶段 | Python 91 项本地回归通过；2026-11-19 QC02 87.5%（35/40）过线；QC05 待人工，整体未验收。Java/HTTP 结果见各次归档 |
+| 阶段 | 2026-11-20 脱敏后 Java 58、Python 98、HTTP 冒烟 26 项通过；QC02 87.5%（35/40）过线；QC05 待人工，整体未验收 |
 | 契约版本 | `BOUNDARY_v1` **v1.4.1** ↔ `openapi.yaml` **v1.5.2**（版本独立演进；对应关系与文件指纹见 `docs/contract-snapshot.json`） |
 | 执行模式 | `SIMULATED`（演示不碰真实资金） |
 | 技术栈 | Java 17 + Spring Boot 3.3.5 + MyBatis + H2/MySQL；Python 3.12 + FastAPI + Pydantic v2（规则式 Agent，未接 LangGraph/LLM） |
@@ -28,11 +28,11 @@
 ├── java/                     Spring Boot 业务后端
 │   ├── src/main/java/...     身份、状态机、幂等、政策、生成、确认执行、审计
 │   ├── src/main/resources/   application*.yml、H2/MySQL DDL
-│   ├── src/test/java/...     集成与回归测试（50 用例）
+│   ├── src/test/java/...     集成与回归测试（58 用例）
 │   └── README.md             启动、接口冒烟、实现取舍、测试映射
 ├── python/                   FastAPI 只读 AI 层
 │   ├── app/                  契约、意图/槽位、检索、工具客户端、草稿
-│   ├── tests/                pytest（91 用例：原 28 + 开发集 60 + 门禁 3）
+│   ├── tests/                pytest（98 用例：原 28 + 开发集 60 + 门禁 3 + 配置 7）
 │   └── README.md             启动、环境变量、与 Java 联调、规则说明
 └── README.md
 ```
@@ -68,12 +68,14 @@
 
 ## 快速开始
 
+每个运行服务的 PowerShell 终端，先在仓库根目录执行 `. ./scripts/dev-env.ps1`。首次生成不入库的随机凭证，后续加载同一份本机配置；部署变量见 [配置说明](docs/CONFIGURATION.md)。
+
 ```powershell
 $env:JAVA_HOME="$env:USERPROFILE\.jdks\corretto-17.0.9"
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 cd java
-mvn -B test                 # 50 个 H2 集成与安全回归测试
+mvn -B test                 # 58 个 H2 集成与配置安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -81,12 +83,11 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # 另开终端：Python AI 层
 cd python
 pip install -r requirements.txt
-python -m pytest -q         # 91 个 pytest
-$env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
+python -m pytest -q         # 98 个 pytest
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-> 密钥边界：`dev` / `test` 才允许使用仓库内置演示密钥；`mysql` / `prod` 等其余 profile 启动时必须注入独立的 `APP_HMAC_SECRET` 与 `APP_AGENT_TOKEN`（各至少 32 字符、不得含 `dev-only` / `change-me` 等示例标记），否则 `StartupGuard` 直接拒绝启动。Python 侧 `AFTERSALE_HMAC_SECRET` 没有默认值，缺失或短于 32 字符同样拒绝启动，且必须与 Java 的 `app.security.hmac-secret` 一致。
+> 凭证边界：只有 `test` 使用合成测试夹具。`dev/mysql/prod` 均须注入两把独立、至少 32 字符的随机凭证；Python HMAC 与 Java 相同。服务地址由 `APP_AGENT_BASE_URL` / `AFTERSALE_JAVA_BASE_URL` 注入，不提供部署地址默认值。前端不包含默认坐席令牌，启动配置不得使用文档中的脱敏占位符。
 
 联调时 Java 加 `--app.agent.mode=http`，并保证两端 `hmac-secret` 一致。本机 PATH 上是 JDK 8，需显式切 `JAVA_HOME`；中文路径下 `mvn spring-boot:run` 可能 classpath 失败，推荐 `package` + `java -jar`。MySQL 8.0.30 已在本机验证：库 `aftersale`、应用账号 `aftersale`，`schema-mysql.sql` 可直接初始化；dev 默认仍用 H2。完整接口冒烟见 `java/README.md`，Python 规则与联调见 `python/README.md`。
 
@@ -95,7 +96,7 @@ MySQL 8 初始化与启动（可选）：
 ```sql
 CREATE DATABASE IF NOT EXISTS aftersale
   CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE USER IF NOT EXISTS 'aftersale'@'localhost' IDENTIFIED BY 'aftersale';
+CREATE USER IF NOT EXISTS 'aftersale'@'localhost' IDENTIFIED BY '<DB_PASSWORD>';
 GRANT ALL PRIVILEGES ON aftersale.* TO 'aftersale'@'localhost';
 ```
 
@@ -103,6 +104,7 @@ GRANT ALL PRIVILEGES ON aftersale.* TO 'aftersale'@'localhost';
 # mysql 不是演示 profile：必须注入两把独立、>=32 字符的密钥
 $env:APP_HMAC_SECRET = "<至少 32 字符的随机 HMAC 密钥>"
 $env:APP_AGENT_TOKEN = "<至少 32 字符的随机坐席令牌>"
+# 同时注入 DB_HOST / DB_USER / DB_PASSWORD；不要提交真实值
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.active=mysql
 ```
 
@@ -114,8 +116,8 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 
 | 指标 | 状态 |
 | --- | --- |
-| Java M-S 集成测试 | 50/50 通过（H2），含启动密钥红线、内部身份越权/重放、执行失败重试、咨询转售后回归、退款草稿缺金额拒发、签收时间缺失/金额缺失政策拦截与生成异常兜底；未做线程级并发压测 |
-| Python AI 单元测试 | 2026-11-19 本地 91/91 通过（规则式桩，FakeTools）；含原 28 项、60 条开发集回归和 3 项门禁边界/计数校验；未接真实 LLM |
+| Java M-S 集成测试 | 2026-11-20 本地 58/58 通过（H2），含原有集成/安全回归及凭证、服务 URL 配置校验；未做线程级并发压测 |
+| Python AI 单元测试 | 2026-11-20 本地 98/98 通过（规则式桩，FakeTools）；含原 28、开发集 60、门禁 3、配置校验 7 项；未接真实 LLM |
 | 意图准确率 / 槽位 F1 / 引用精确率 | 2026-11-19 同一 holdout：QC02 87.5%（35/40，门槛 85%）、订单号召回 100%；草稿可用率待双评。详见 [QC02 修复记录](docs/QC02修复记录_2026-11-19.md) |
 | 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
 | MySQL 真机 | 已在本机 MySQL 8.0.30 验证生成列、唯一索引与 `ON DUPLICATE KEY UPDATE`；未做多实例并发压测 |
@@ -155,16 +157,19 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 
 ```powershell
 # Python 终端（先激活已安装依赖的 Python 环境）
+. ./scripts/dev-env.ps1
 cd python
 $env:AFTERSALE_JAVA_BASE_URL = 'http://127.0.0.1:18080'
 python -m uvicorn app.main:app --host 127.0.0.1 --port 18000
 
 # Java 终端，位于仓库根目录，使用 JDK17
+. ./scripts/dev-env.ps1
 & "$env:JAVA_HOME\bin\java.exe" -jar java\target\aftersale-agent-java-0.1.0-SNAPSHOT.jar `
     --spring.profiles.active=dev --server.address=127.0.0.1 --server.port=18080 `
     --app.execution.mode=SIMULATED --app.agent.mode=http --app.agent.base-url=http://127.0.0.1:18000
 
 # 冒烟终端，位于仓库根目录；两端 HMAC 必须一致
+. ./scripts/dev-env.ps1
 python scripts\e2e_smoke.py --java http://127.0.0.1:18080 --python http://127.0.0.1:18000
 ```
 

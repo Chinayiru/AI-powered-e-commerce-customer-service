@@ -4,6 +4,8 @@
 
 ## 快速开始
 
+在仓库根目录先执行 `. ./scripts/dev-env.ps1`，每个运行服务的终端都加载同一份私有配置。变量详见 [配置说明](../docs/CONFIGURATION.md)。
+
 ```powershell
 cd H:\电商工单ai\python
 python -m venv .venv
@@ -30,21 +32,22 @@ Python 调用 Java 的 `/internal/tools/queryOrder` 与 `/internal/tools/getLogi
 ```powershell
 # 1) 启动 Java（HTTP 模式）
 cd H:\电商工单ai\java
+. ../scripts/dev-env.ps1
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --app.agent.mode=http
 
 # 2) 启动 Python
 cd H:\电商工单ai\python
-$env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
+. ../scripts/dev-env.ps1
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Java 默认配置：
+Java HTTP 模式的配置（地址必须从环境注入）：
 
 ```yaml
 app:
   agent:
     mode: http
-    base-url: http://localhost:8000
+    base-url: ${APP_AGENT_BASE_URL}
     timeout-ms: 8000
 ```
 
@@ -54,7 +57,7 @@ app:
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `AFTERSALE_JAVA_BASE_URL` | `http://localhost:8080` | Java 工具服务地址 |
+| `AFTERSALE_JAVA_BASE_URL` | **无，必填** | Java 工具服务地址；不允许 URL 携带凭证、查询串或片段 |
 | `AFTERSALE_HMAC_SECRET` | **无，必填** | 内部 HMAC 共享密钥；至少 32 字符，缺失/过短拒绝启动；须与 Java `app.security.hmac-secret` 一致 |
 | `AFTERSALE_TOOL_TIMEOUT_SECONDS` | `1.0` | 单次工具调用超时 |
 | `AFTERSALE_TOOL_RETRIES` | `1` | 超时/503/504 重试次数 |
@@ -139,6 +142,8 @@ base64url(JSON{"userId","role","exp","nonce"}) + "." + base64url(HMAC_SHA256(pay
 `tests/test_agent.py` 覆盖 28 个场景：鉴权、签名/nonce 重放、跨端点重放、body `userId` 与签名身份不一致 403、Python 角色越权 403、缺失/过短密钥启动失败、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全、内部异常契约体、订单号长度上限与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
 
 `tests/test_intent_dev.py` 另覆盖独立开发集的 60 条分类与 Agent 动作语义、3 条 QC02 门禁边界/计数校验；总计 91 项。开发集先于本轮规则修改创建并保持不变，支持疑问、否定、条件式、多意图、安全闸与多订单场景。调规则时只运行开发集和回归，不读取 holdout 错例继续调参。
+
+2026-11-20 另增 `tests/test_config.py` 的 7 项配置回归，当前总计 98 项。
 
 ```powershell
 # 位于 python/；只读取 dev_v1.jsonl，不读取 holdout

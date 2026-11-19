@@ -9,6 +9,8 @@
 
 ## 1. 快速开始
 
+在仓库根目录先执行 `. ./scripts/dev-env.ps1` 加载本机凭证，再进入 `java/`。部署参数见 [凭证与服务地址](../docs/CONFIGURATION.md)。
+
 环境要求：JDK 17、Maven 3.6+。当前机器 PATH 上默认是 JDK 8，必须显式指定：
 
 ```powershell
@@ -18,7 +20,7 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 ```powershell
 cd H:\电商工单ai\java
-mvn -B test                 # 50 个 H2 集成与安全回归测试
+mvn -B test                 # 58 个 H2 集成与配置安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -35,14 +37,14 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 | `mysql` | 读 `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD`，执行 `db/schema-mysql.sql`；必须额外注入 `APP_HMAC_SECRET` / `APP_AGENT_TOKEN`，且关闭了自报身份 |
 | `prod` | 关闭演示头身份，要求 SSO/真实密钥，启动自检失败即拒绝启动 |
 
-> 密钥红线：只有“全部激活 profile 都是 `dev` / `test`”时才允许使用仓库内置演示密钥。`mysql`、`prod`、以及 `dev,prod` 这类混合 profile 必须在启动前注入两把独立凭证：
+> 密钥红线：只有纯 `test` profile 使用合成测试夹具；`dev/mysql/prod` 均须启动前注入两把独立凭证：
 >
 > ```powershell
 > $env:APP_HMAC_SECRET = "<至少 32 字符的随机 HMAC 密钥>"
 > $env:APP_AGENT_TOKEN = "<至少 32 字符的随机坐席令牌>"
 > ```
 >
-> 两把值不得相同，也不得包含 `dev-only`、`change-me`、`demo-agent-token`、`please`、`example` 等示例标记；否则 `StartupGuard` 在端口开始服务前抛错。`dev` / `test` 的演示值只用于本机联调。
+> 两把值不得相同，不得使用示例串、脱敏占位符或 test-only 测试值。HTTP 模式需注入 `APP_AGENT_BASE_URL`；MySQL 需注入 `DB_HOST/DB_USER/DB_PASSWORD`，均不再提供默认凭证。
 
 ## 2. 5 分钟冒烟
 
@@ -59,11 +61,11 @@ curl -X POST http://localhost:8080/api/tickets/{ticketId}/messages \
 
 # 3) 坐席视图：看到 DRAFT_READY、退款 5800 分、needHumanReview=true
 curl http://localhost:8080/api/agent/tickets/{afterSaleTicketId} \
-  -H "X-Agent-Token: demo-agent-token"
+  -H "X-Agent-Token: ${APP_AGENT_TOKEN}"
 
 # 4) 坐席确认发送（金额 > 5000 必须写复核说明）
 curl -X POST http://localhost:8080/api/agent/tickets/{afterSaleTicketId}/send \
-  -H "Content-Type: application/json" -H "X-Agent-Token: demo-agent-token" \
+  -H "Content-Type: application/json" -H "X-Agent-Token: ${APP_AGENT_TOKEN}" \
   -d '{"text":"已为您提交退款申请（演示环境，未真实退款）。","draftVersion":1,"reviewNote":"已核对订单与金额","expectedVersion":3,"requestId":"33333333-3333-4333-8333-333333333333"}'
 ```
 
@@ -109,7 +111,7 @@ java/
 ### 身份
 
 - 消费者：演示阶段用 `X-User-Id`（仅 U001/U002），建单后返回 HMAC 签名的 `ticketToken`；后续查询、发消息、撤销只认 Bearer token，且 token 的 `ticketId` 必须与路径一致。
-- 坐席：`X-Agent-Token`（演示值 `demo-agent-token`，生产从环境变量注入）。
+- 坐席：`X-Agent-Token`，所有运行环境均从 `APP_AGENT_TOKEN` 注入；仅离线测试有合成夹具。
 - 内部工具：`X-Internal-Identity`，HMAC 覆盖 `userId/role/exp/nonce`；nonce 去重键为 `nonce|userId|role|path`，同一 Python 请求多次调用工具不会被误判为重放。
 
 ### 状态与生成
@@ -174,7 +176,7 @@ mvn -B test
 - `X-Trace-Id` 落入审计；
 - 内部工具身份、nonce 重放、跨端点重放、agent 角色越权 403、越权 404；
 - 空坐席令牌 401；
-- 启动红线：非 dev/test 的示例串/短密钥/自报身份/共用密钥均拒绝，`dev,prod` 混合 profile 不得绕过，prod 必须 SSO + http；
+- 启动红线：仅纯 test 使用合成夹具；dev/mysql/prod 拒绝示例串、短密钥和共用密钥，非 dev/test 禁用自报身份，prod 必须 SSO + http；
 - `handoff → reply → close` 与 `send` 幂等后消费者看到 `CLOSED`；
 - 退款草稿缺金额时 `send` 409 `POLICY_REJECTED` 且不进入执行；五个写接口缺 `expectedVersion` → 422 `INVALID_ARGS`，不支持的 `Content-Type` → 422 而非 500；
 - `DELIVERED` 缺 `deliveredAt` → `ORDER_TIME_UNKNOWN`，退款请求缺金额 → `AMOUNT_MISSING`，资格咨询仍允许无金额；

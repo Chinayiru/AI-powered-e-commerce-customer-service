@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 _MIN_SECRET_LENGTH = 32
 
@@ -36,6 +37,21 @@ def _required_hmac_secret() -> str:
     return value
 
 
+def _required_java_base_url() -> str:
+    value = (os.getenv("AFTERSALE_JAVA_BASE_URL") or "").strip().rstrip("/")
+    try:
+        url = urlsplit(value)
+        if (url.scheme not in {"http", "https"} or not url.hostname
+                or url.username is not None or url.password is not None
+                or url.query or url.fragment or url.hostname.endswith(".invalid")):
+            raise ValueError
+        _ = url.port
+    except ValueError:
+        # Do not include a possibly credential-bearing value in the error.
+        raise RuntimeError("AFTERSALE_JAVA_BASE_URL 未配置或无效，地址不得包含凭证、查询串或片段") from None
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     java_base_url: str
@@ -60,7 +76,7 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         return cls(
-            java_base_url=os.getenv("AFTERSALE_JAVA_BASE_URL", "http://localhost:8080").rstrip("/"),
+            java_base_url=_required_java_base_url(),
             hmac_secret=_required_hmac_secret(),
             tool_timeout_seconds=_env_float("AFTERSALE_TOOL_TIMEOUT_SECONDS", 1.0),
             tool_retries=_env_int("AFTERSALE_TOOL_RETRIES", 1),
