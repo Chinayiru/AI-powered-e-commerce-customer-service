@@ -125,7 +125,7 @@ python -m app.cli run --fixture tb_1001 --provider auto   # 同 openai_compat：
 ## 测试
 
 ```powershell
-python -m pytest -q                      # 契约 + 验收 + API + provider，共 89 条（全离线）
+python -m pytest -q                      # 契约 + 验收 + API + provider + 意图，共 112 条（全离线）
 python -m pytest tests/acceptance -q     # AC01–AC26
 python -m pytest tests/test_api.py -q    # 前端依赖的 HTTP 契约
 python -m pytest tests/test_llm_openai_compat.py -q   # 真实 provider 的离线契约（假 transport）
@@ -142,6 +142,42 @@ python -m app.eval.retrieval --compare           # keyword vs hybrid，写 repor
 v0 实测（合成集，`provider=scripted`）：keyword recall@5 = **0.950**，hybrid = **0.950**，
 delta = 0.000 < 3pt → **向量通道关闭**。三条漏检（"P 图"、"起诉"、"没货"）是词面缺口，
 正好说明这套数字只证明管线通、不证明语义能力；真实结论要等 200 条人工打标 QA。
+
+## 意图开发集与规则评测
+
+意图判断（`refund` / `address_change` / `shipping_urge` / `other`，以及退款的
+`refund_only` / `return_refund` 子类型）有一套**独立于检索集**的标注数据，用来回答
+"只看文本能到多少分"，而不是靠手感。
+
+```powershell
+python -m app.eval.intent            # 开发集门禁 + 两个留出集，写 reports/intent_dev_v0.json
+python -m app.eval.intent --quiet    # 只打错误清单
+```
+
+数据（三份，文本互不重复，也与 `queries_60.jsonl`、`fixtures/` 工单文本不重复）：
+
+| 文件 | 条数 | 用途 |
+| --- | --- | --- |
+| `data/eval/intent_dev.jsonl` | 94 | 唯一允许调参的集合（`ID001`–`ID094`） |
+| `data/eval/intent_holdout.jsonl` | 50 | 第一留出集；它的 8 个错误被拿来补同义词 → **已污染**，0.86 不能再当泛化数字 |
+| `data/eval/intent_holdout2.jsonl` | 30 | 冻结留出集，v2 规则只在它上面测过一次 |
+
+v2 实测（`app/intent/rules.py`，纯函数、离线、不联网）：
+
+| 集合 | accuracy | macroF1 | 子类型准确率 |
+| --- | --- | --- | --- |
+| 单关键词基线（naive） | 0.596 | 0.646 | 0.882 |
+| 规则 v1 · 开发集 | **1.000** | 1.000 | 1.000 |
+| 规则 v1 · holdout2（冻结） | **0.967** | **0.953** | 0.929 |
+
+开发集 1.000 是**过拟合的诚实写法**，不是成绩。4 分类的泛化数字看 holdout2：
+30 条里错 2 条——`HT07`"尺码选错了，退款吧，东西没寄"（应 `refund_only`，"尺码"
+带了退货语义）、`HT20`"两天了还没发，催一下"（"催一下"权重 3 分，低于成案阈值 4）。
+这两条留在数据里不修，等下一轮用**新**开发样本处理，以保住 holdout2 的冻结性。
+
+边界（重要）：规则层是**离线先验**，`app.core.pipeline` 不 import 它，它也不下退款
+结论、不替代模型——线上仍以模型输出为准（CONTRACT P0 / §6.4）。测试
+`tests/test_intent_rules.py` 会读源码断言这条依赖方向没被打破。
 
 ## 封存基线
 
@@ -163,8 +199,9 @@ app/domain/      售后单状态机（唯一迁移入口）
 app/policy/      退款策略（纯函数）+ 出口话术整形
 app/llm/         Provider 协议、prompt、scripted 台词
 app/retrieval/   BM25 关键词检索 + 混合（向量通道默认关）
+app/intent/      意图规则（离线文本先验，不接主链路）
 app/core/        pipeline（预算/超时/重试/引用校验）、脱敏
-app/eval/        检索评测、基线封存
+app/eval/        检索评测、意图开发集评测、基线封存
 app/api/         HTTP 包装（薄封装 pipeline，不新增业务规则）
 web/             React + Vite 控制台；构建产物在 web/dist
 fixtures/        10 个故意脏的快照
@@ -185,4 +222,6 @@ NG-6「前端工程化」已按 ADR-011 破例：控制台只做展示与触发�
   因此控制台里改写文本不会改变意图。配好 `.env` 走 `openai_compat` 后才由文本驱动，
   但真实模型非确定性，不适合当回归基线。
 - 检索数据集是合成的：0.95 不能对外当作效果指标。
+- 意图开发集也是**手写**的：holdout2 的 0.967 说明"规则能覆盖常见说法"，不等于
+  线上分布。开发集 94 条全对是过拟合；真值要靠人工扩样与线上抽样复核。
 - 没有并发与队列：`pipeline.run` 同步执行，靠 `timeout_ms` + `token_budget` 兜底。

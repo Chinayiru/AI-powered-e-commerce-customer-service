@@ -267,6 +267,31 @@ class Retriever(Protocol):
 | 60 条检索查询有标注 `qa_ids` | 100% |
 | 回答含"保证/一定/立刻到账"等绝对承诺 | 0 条 |
 
+## 7A. 意图规则层（离线先验，不入主链路）
+
+> 编号写成 7A 而不是 8，是为了不动后面已有的 8/9/10 章节引用。
+
+`app/intent/rules.py` 是**纯函数文本先验**：`classify(text) -> RuleResult(intent,
+aftersales_type, confidence, cues, ambiguous)`。它存在的唯一目的是让"意图规则改没改好"
+有数字可依，因此有三条硬边界：
+
+| 边界 | 规则 |
+| --- | --- |
+| 不入主链路 | `app.core.pipeline` 不得 import `app.intent`；规则也不得 import pipeline。线上判定仍以模型输出为准（P0 / §6.4） |
+| 不下结论 | 只输出意图标签与子类型，不产出 verdict、金额、send_gate；不碰状态机 |
+| 调参隔离 | 只允许在 `data/eval/intent_dev.jsonl` 上调参；`data/eval/queries_60.jsonl`（检索评测集）与 `fixtures/` 工单文本禁止复用 |
+
+数据集与门禁：
+
+- `data/eval/intent_dev.jsonl`（开发集，≥80 条，四类各 ≥14，refund 两类各 ≥10，hard ≥15）
+  按 `THRESHOLDS` 门禁：accuracy ≥ 0.85、macroF1 ≥ 0.78、refund recall ≥ 0.88、
+  refund_only recall ≥ 0.80、return_refund recall ≥ 0.75。
+- `data/eval/intent_holdout.jsonl` 与 `data/eval/intent_holdout2.jsonl` 是留出集，只做
+  一次性测量，下限 `HOLDOUT_FLOOR`（accuracy ≥ 0.80、macroF1 ≥ 0.75）。
+  第一留出集的错误曾被用于补同义词，故它**已污染**，泛化数字只认 holdout2。
+- 开发集满分**不构成**效果声明：报告与 README 必须同时给出留出集数字。
+- 三份数据的文本必须互不重复（测试强制），避免"背题"。
+
 ---
 
 ## 8. 模型层
@@ -391,6 +416,7 @@ class TicketOut(BaseModel):       # 出口
 | ADR-011 | 破例 NG-6：新增 `web/` 控制台 + 只读/跑单 HTTP API | 继续只用 CLI；或先做静态 HTML 报告 | 演示与排障需要可视化证据链；API 只编排 `pipeline.run`，CLI 仍可复现同一结果 | 多一套前端依赖与构建产物；API 需随 CLI 同步 |
 | ADR-012 | 模型走配置（`AFTERSALE_LLM_PROVIDER/BASE_URL/MODEL/API_KEY`），提供 `OpenAICompatProvider`；测试强制 scripted | 把真实模型写进代码默认值；或在测试里也调真实模型 | 换模型只改 `.env` 不改代码；真实模型非确定性，会破坏 AC16/AC20，故测试用 autouse fixture 锁死 scripted | 多一层配置解析与脱敏；真实模型回放的 `drift` 属预期 |
 | ADR-013 | 写接口要求已验证操作人（`AFTERSALE_OPERATORS` + `X-Operator-*`），`confirm` 必须等于登录身份；`auto` 缺配置直接报错，不再静默回退 scripted | 继续允许匿名 `POST /api/runs`；或让 `auto` 缺 key 时念台词 | 审批与打款必须能归因到"谁确认的"；静默回退会让线上"以为在调模型、其实在回放"，事故不可归因 | 控制台多一步登录；本地演示需在 `.env` 配一个 `id:token` |
+| ADR-014 | 意图规则只做**离线先验**，不进主链路：`app/intent/rules.py` 纯函数 + 独立开发集/留出集评测 | 把规则接进 pipeline 当兜底；或用规则替代模型判意图 | 一期卖点是"模型输出 + 策略/闸门兜底"，规则一旦进主链路就出现第二套判定，事故无法归因；且规则可离线、可复现，正好用来给出"意图这步有多难"的诚实数字 | 规则与线上行为可能不一致；开发集满分需靠留出集校正，否则会误导 |
 
 ---
 
@@ -403,3 +429,4 @@ class TicketOut(BaseModel):       # 出口
 | v1.2 | 2026-11-12 | 破例 NG-6：新增 `app/api/server.py`（薄封装 `pipeline.run` 的 HTTP API）与 `web/` React 控制台（ADR-011）；策略、状态机、闸门仍只有一份实现。 |
 | v1.3 | 2026-11-12 | 接入 OpenAI 兼容真实模型（ADR-012）：`app/llm/openai_compat.py` + `settings.resolve()` + `factory.make_provider()`；CLI `--provider`、API `provider/max_tokens` 字段与记录里的 `llm` 五元组；测试 autouse 锁 scripted；`app.eval.seal --provider` 另存新基线。 |
 | v1.4 | 2026-11-18 | 评审 M1–M12 修正：P8/P10/P11 命中必须 `undecided`（不能只抬 send_gate）；新增 `R_AMOUNT_OVER_PAID`（P5b）与 P9 只批到比例上限；P8 限定"仅退款"（与 AC10 对齐）；`needs_human` 进 PRIORITY（P12）；`scripted` 未命中抛 `E_SCRIPT_MISS`；模型超时前置到请求；平台脏值统一 `E_PLATFORM_ANOMALY`；trace 脱敏接入生产路径。另：写接口要求操作人身份（§9.1、ADR-013），`auto` 缺配置报错。 |
+| v1.5 | 2026-11-19 | 新增 §7A 意图规则层（ADR-014）：`app/intent/rules.py` 离线文本先验 + `data/eval/intent_dev.jsonl`（94 条）与两份留出集；`python -m app.eval.intent` 出门禁与 `reports/intent_dev_v0.json`。规则不接主链路，`pipeline` 与 `app.intent` 互不 import（测试断言）。实测 naive 0.596 → 规则 holdout2 0.967；开发集 1.000 记作过拟合。 |

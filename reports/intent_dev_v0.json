@@ -1,0 +1,1025 @@
+{
+  "report": "intent_dev_v0",
+  "created_at": "2026-11-19T03:58:15.106426+00:00",
+  "git_sha": "b1dab117",
+  "dev_path": "data\\eval\\intent_dev.jsonl",
+  "dev_sha256": "5111584e54cd8310",
+  "case_count": 94,
+  "thresholds": {
+    "accuracy": 0.85,
+    "macro_f1": 0.78,
+    "refund_recall": 0.88,
+    "refund_only_recall": 0.8,
+    "return_refund_recall": 0.75
+  },
+  "gate": "passed",
+  "failed": {},
+  "rule": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "refund": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 41
+      },
+      "address_change": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 14
+      },
+      "shipping_urge": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 18
+      },
+      "other": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 21
+      }
+    },
+    "confusion": {
+      "refund": {
+        "refund": 41,
+        "address_change": 0,
+        "shipping_urge": 0,
+        "other": 0
+      },
+      "address_change": {
+        "refund": 0,
+        "address_change": 14,
+        "shipping_urge": 0,
+        "other": 0
+      },
+      "shipping_urge": {
+        "refund": 0,
+        "address_change": 0,
+        "shipping_urge": 18,
+        "other": 0
+      },
+      "other": {
+        "refund": 0,
+        "address_change": 0,
+        "shipping_urge": 0,
+        "other": 21
+      }
+    },
+    "type_accuracy": 1.0,
+    "type_per_class": {
+      "refund_only": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 25
+      },
+      "return_refund": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 16
+      }
+    },
+    "errors": [],
+    "total": 94
+  },
+  "baseline_naive": {
+    "accuracy": 0.5957,
+    "macro_f1": 0.6456,
+    "per_class": {
+      "refund": {
+        "precision": 0.7083,
+        "recall": 0.4146,
+        "f1": 0.5231,
+        "support": 41
+      },
+      "address_change": {
+        "precision": 0.9333,
+        "recall": 1.0,
+        "f1": 0.9655,
+        "support": 14
+      },
+      "shipping_urge": {
+        "precision": 0.6111,
+        "recall": 0.6111,
+        "f1": 0.6111,
+        "support": 18
+      },
+      "other": {
+        "precision": 0.3784,
+        "recall": 0.6667,
+        "f1": 0.4828,
+        "support": 21
+      }
+    },
+    "confusion": {
+      "refund": {
+        "refund": 17,
+        "address_change": 1,
+        "shipping_urge": 7,
+        "other": 16
+      },
+      "address_change": {
+        "refund": 0,
+        "address_change": 14,
+        "shipping_urge": 0,
+        "other": 0
+      },
+      "shipping_urge": {
+        "refund": 0,
+        "address_change": 0,
+        "shipping_urge": 11,
+        "other": 7
+      },
+      "other": {
+        "refund": 7,
+        "address_change": 0,
+        "shipping_urge": 0,
+        "other": 14
+      }
+    },
+    "type_accuracy": 0.8824,
+    "type_per_class": {
+      "refund_only": {
+        "precision": 0.75,
+        "recall": 0.12,
+        "f1": 0.2069,
+        "support": 25
+      },
+      "return_refund": {
+        "precision": 0.9231,
+        "recall": 0.75,
+        "f1": 0.8276,
+        "support": 16
+      }
+    },
+    "errors": [
+      {
+        "case_id": "ID001",
+        "text": "还没发货，我不想要了，麻烦退款。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "发货"
+        ]
+      },
+      {
+        "case_id": "ID002",
+        "text": "拍错了，麻烦帮我退一下款，订单还没发。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID003",
+        "text": "这单不要了，直接原路退回吧，别发货了。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "发货"
+        ]
+      },
+      {
+        "case_id": "ID005",
+        "text": "优惠券没用上，价格不对，退我差价 20 元。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID006",
+        "text": "少发了一件，退我一件的钱就行。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID008",
+        "text": "付款后一直没发货，我不要了，退钱。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "发货"
+        ]
+      },
+      {
+        "case_id": "ID009",
+        "text": "重复下单了，退掉多拍的那一单。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID010",
+        "text": "商品降价了，麻烦退我差价 30 元。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID011",
+        "text": "我只要退款，不退货，包装还没拆。",
+        "gold": "refund/refund_only",
+        "pred": "refund/return_refund",
+        "confidence": 0.6,
+        "cues": [
+          "退款",
+          "退货"
+        ]
+      },
+      {
+        "case_id": "ID012",
+        "text": "快递显示已签收但我没收到，申请退款。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "快递"
+        ]
+      },
+      {
+        "case_id": "ID013",
+        "text": "我要退款，另外收货地址也写错了，一起改。",
+        "gold": "refund",
+        "pred": "address_change",
+        "confidence": 0.6,
+        "cues": [
+          "地址"
+        ]
+      },
+      {
+        "case_id": "ID014",
+        "text": "订单金额算错了，多收了我 15 块，退回来。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID016",
+        "text": "漏发了配件，退我 20 元。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID017",
+        "text": "帮我取消这单，钱退到原支付账户。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID018",
+        "text": "东西还没出库，直接退款，不用发货了。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "发货"
+        ]
+      },
+      {
+        "case_id": "ID019",
+        "text": "我买错了规格，退一下款，货还在仓库。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID020",
+        "text": "商品页面写包邮，结果收了运费，退我运费 12 元。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID028",
+        "text": "发错货了，我要退回去换一个，退我钱。",
+        "gold": "refund",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID030",
+        "text": "快递到了，但我不想要了，退货退款吧。",
+        "gold": "refund",
+        "pred": "shipping_urge",
+        "confidence": 0.6,
+        "cues": [
+          "快递"
+        ]
+      },
+      {
+        "case_id": "ID034",
+        "text": "手机屏幕有划痕，我要退掉，退款。",
+        "gold": "refund/return_refund",
+        "pred": "refund/refund_only",
+        "confidence": 0.6,
+        "cues": [
+          "退款"
+        ]
+      },
+      {
+        "case_id": "ID054",
+        "text": "我的包裹一直显示揽收，是不是丢了？",
+        "gold": "shipping_urge",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID055",
+        "text": "麻烦问下大概几天能到北京？",
+        "gold": "shipping_urge",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID056",
+        "text": "已经付款两天了，还没出库吗？",
+        "gold": "shipping_urge",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID059",
+        "text": "能不能今天发出来？明天要出差。",
+        "gold": "shipping_urge",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      },
+      {
+        "case_id": "ID062",
+        "text": "顺丰还是中通发的？大概什么时候到？",
+        "gold": "shipping_urge",
+        "pred": "other",
+        "confidence": 0.3,
+        "cues": []
+      }
+    ],
+    "total": 94
+  },
+  "improvement": {
+    "accuracy": 0.4043,
+    "macro_f1": 0.3544,
+    "type_accuracy": 0.1176
+  },
+  "note": "开发集独立于 data/eval/queries_60.jsonl；只用于调意图规则，不参与检索指标",
+  "holdouts": [
+    {
+      "path": "data\\eval\\intent_holdout.jsonl",
+      "sha256": "c7e555b3f0849757",
+      "case_count": 50,
+      "floor": {
+        "accuracy": 0.8,
+        "macro_f1": 0.75
+      },
+      "gate": "passed",
+      "failed": {},
+      "rule": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "per_class": {
+          "refund": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          },
+          "address_change": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          },
+          "shipping_urge": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 9
+          },
+          "other": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 13
+          }
+        },
+        "confusion": {
+          "refund": {
+            "refund": 20,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 0
+          },
+          "address_change": {
+            "refund": 0,
+            "address_change": 8,
+            "shipping_urge": 0,
+            "other": 0
+          },
+          "shipping_urge": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 9,
+            "other": 0
+          },
+          "other": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 13
+          }
+        },
+        "type_accuracy": 1.0,
+        "type_per_class": {
+          "refund_only": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 12
+          },
+          "return_refund": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "errors": [],
+        "total": 50
+      },
+      "baseline_naive": {
+        "accuracy": 0.6,
+        "macro_f1": 0.637,
+        "per_class": {
+          "refund": {
+            "precision": 0.7143,
+            "recall": 0.5,
+            "f1": 0.5882,
+            "support": 20
+          },
+          "address_change": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1": 0.8571,
+            "support": 8
+          },
+          "shipping_urge": {
+            "precision": 0.625,
+            "recall": 0.5556,
+            "f1": 0.5882,
+            "support": 9
+          },
+          "other": {
+            "precision": 0.4091,
+            "recall": 0.6923,
+            "f1": 0.5143,
+            "support": 13
+          }
+        },
+        "confusion": {
+          "refund": {
+            "refund": 10,
+            "address_change": 0,
+            "shipping_urge": 3,
+            "other": 7
+          },
+          "address_change": {
+            "refund": 0,
+            "address_change": 6,
+            "shipping_urge": 0,
+            "other": 2
+          },
+          "shipping_urge": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 5,
+            "other": 4
+          },
+          "other": {
+            "refund": 4,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 9
+          }
+        },
+        "type_accuracy": 0.9,
+        "type_per_class": {
+          "refund_only": {
+            "precision": 1.0,
+            "recall": 0.1667,
+            "f1": 0.2857,
+            "support": 12
+          },
+          "return_refund": {
+            "precision": 0.875,
+            "recall": 0.875,
+            "f1": 0.875,
+            "support": 8
+          }
+        },
+        "errors": [
+          {
+            "case_id": "HD01",
+            "text": "下单后发现买重了，麻烦退掉一单，东西还没发。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD02",
+            "text": "我不等发货了，直接退钱给我。",
+            "gold": "refund",
+            "pred": "shipping_urge",
+            "confidence": 0.6,
+            "cues": [
+              "发货"
+            ]
+          },
+          {
+            "case_id": "HD03",
+            "text": "赠品漏了，补我 15 块。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD04",
+            "text": "这个价格比昨天贵了，退我差价。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD05",
+            "text": "还没看到发货，取消吧，退款。",
+            "gold": "refund",
+            "pred": "shipping_urge",
+            "confidence": 0.6,
+            "cues": [
+              "发货"
+            ]
+          },
+          {
+            "case_id": "HD07",
+            "text": "订单状态一直待发货，我不要了，申请仅退款。",
+            "gold": "refund",
+            "pred": "shipping_urge",
+            "confidence": 0.6,
+            "cues": [
+              "发货"
+            ]
+          },
+          {
+            "case_id": "HD08",
+            "text": "你们重复扣款了，退一笔回来。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD09",
+            "text": "优惠没叠加成功，差的钱退我。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD10",
+            "text": "货还在你们仓库，退了吧。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD12",
+            "text": "商品描述写买一送一，没送，退我一半钱。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD18",
+            "text": "你们发的型号不对，我退回来换正确的，退款。",
+            "gold": "refund/return_refund",
+            "pred": "refund/refund_only",
+            "confidence": 0.6,
+            "cues": [
+              "退款"
+            ]
+          },
+          {
+            "case_id": "HD24",
+            "text": "电话留错了，改成 13900002222。",
+            "gold": "address_change",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD28",
+            "text": "收货信息里的门牌号写错了，补 3 号。",
+            "gold": "address_change",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD29",
+            "text": "付款四天了，什么时候能发？",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD32",
+            "text": "东西到哪了？",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD33",
+            "text": "明天能送到吗？急用。",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD35",
+            "text": "包裹在网点停了三天，麻烦查查。",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HD45",
+            "text": "退货的话运费谁出？",
+            "gold": "other",
+            "pred": "refund",
+            "confidence": 0.6,
+            "cues": [
+              "退货"
+            ]
+          },
+          {
+            "case_id": "HD46",
+            "text": "退款一般几天到账？",
+            "gold": "other",
+            "pred": "refund",
+            "confidence": 0.6,
+            "cues": [
+              "退款"
+            ]
+          },
+          {
+            "case_id": "HD47",
+            "text": "麻烦查下我上一笔退款到账没。",
+            "gold": "other",
+            "pred": "refund",
+            "confidence": 0.6,
+            "cues": [
+              "退款"
+            ]
+          },
+          {
+            "case_id": "HD49",
+            "text": "取消退款吧，我又想要了。",
+            "gold": "other",
+            "pred": "refund",
+            "confidence": 0.6,
+            "cues": [
+              "退款"
+            ]
+          }
+        ],
+        "total": 50
+      },
+      "note": "留出集只用于最终测量，不参与调参；跑完这一遍就冻结"
+    },
+    {
+      "path": "data\\eval\\intent_holdout2.jsonl",
+      "sha256": "2f900f8380a8a367",
+      "case_count": 30,
+      "floor": {
+        "accuracy": 0.8,
+        "macro_f1": 0.75
+      },
+      "gate": "passed",
+      "failed": {},
+      "rule": {
+        "accuracy": 0.9667,
+        "macro_f1": 0.953,
+        "per_class": {
+          "refund": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 14
+          },
+          "address_change": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "shipping_urge": {
+            "precision": 1.0,
+            "recall": 0.8,
+            "f1": 0.8889,
+            "support": 5
+          },
+          "other": {
+            "precision": 0.8571,
+            "recall": 1.0,
+            "f1": 0.9231,
+            "support": 6
+          }
+        },
+        "confusion": {
+          "refund": {
+            "refund": 14,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 0
+          },
+          "address_change": {
+            "refund": 0,
+            "address_change": 5,
+            "shipping_urge": 0,
+            "other": 0
+          },
+          "shipping_urge": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 4,
+            "other": 1
+          },
+          "other": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 6
+          }
+        },
+        "type_accuracy": 0.9286,
+        "type_per_class": {
+          "refund_only": {
+            "precision": 0.875,
+            "recall": 0.875,
+            "f1": 0.875,
+            "support": 8
+          },
+          "return_refund": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 6
+          }
+        },
+        "errors": [
+          {
+            "case_id": "HT07",
+            "text": "尺码选错了，退款吧，东西没寄。",
+            "gold": "refund/refund_only",
+            "pred": "refund/return_refund",
+            "confidence": 0.95,
+            "cues": [
+              "退款吧",
+              "选错"
+            ]
+          },
+          {
+            "case_id": "HT20",
+            "text": "两天了还没发，催一下。",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.67,
+            "cues": [
+              "催一下"
+            ]
+          }
+        ],
+        "total": 30
+      },
+      "baseline_naive": {
+        "accuracy": 0.6,
+        "macro_f1": 0.6369,
+        "per_class": {
+          "refund": {
+            "precision": 0.8571,
+            "recall": 0.4286,
+            "f1": 0.5714,
+            "support": 14
+          },
+          "address_change": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "shipping_urge": {
+            "precision": 0.6667,
+            "recall": 0.4,
+            "f1": 0.5,
+            "support": 5
+          },
+          "other": {
+            "precision": 0.3333,
+            "recall": 0.8333,
+            "f1": 0.4762,
+            "support": 6
+          }
+        },
+        "confusion": {
+          "refund": {
+            "refund": 6,
+            "address_change": 0,
+            "shipping_urge": 1,
+            "other": 7
+          },
+          "address_change": {
+            "refund": 0,
+            "address_change": 5,
+            "shipping_urge": 0,
+            "other": 0
+          },
+          "shipping_urge": {
+            "refund": 0,
+            "address_change": 0,
+            "shipping_urge": 2,
+            "other": 3
+          },
+          "other": {
+            "refund": 1,
+            "address_change": 0,
+            "shipping_urge": 0,
+            "other": 5
+          }
+        },
+        "type_accuracy": 0.8333,
+        "type_per_class": {
+          "refund_only": {
+            "precision": 1.0,
+            "recall": 0.125,
+            "f1": 0.2222,
+            "support": 8
+          },
+          "return_refund": {
+            "precision": 0.8,
+            "recall": 0.6667,
+            "f1": 0.7273,
+            "support": 6
+          }
+        },
+        "errors": [
+          {
+            "case_id": "HT01",
+            "text": "预售等太久了，我退掉，货没发。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT02",
+            "text": "下错单了，麻烦把钱退回来，仓库还没发。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT03",
+            "text": "赠品缺了两个，折 30 块退我。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT04",
+            "text": "结算时多算运费，退我 12 块。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT05",
+            "text": "我重复付了一次款，退一笔。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT06",
+            "text": "还没发货，帮我取消并退款。",
+            "gold": "refund",
+            "pred": "shipping_urge",
+            "confidence": 0.6,
+            "cues": [
+              "发货"
+            ]
+          },
+          {
+            "case_id": "HT08",
+            "text": "商品写着第二件半价，结果没减，退差价。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT11",
+            "text": "用了三天就黑屏，退款，机子我寄回。",
+            "gold": "refund/return_refund",
+            "pred": "refund/refund_only",
+            "confidence": 0.6,
+            "cues": [
+              "退款"
+            ]
+          },
+          {
+            "case_id": "HT12",
+            "text": "收到的鞋码大一码，退回去换。",
+            "gold": "refund",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT20",
+            "text": "两天了还没发，催一下。",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT22",
+            "text": "我这个件到哪了？",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT23",
+            "text": "明天能到吗？",
+            "gold": "shipping_urge",
+            "pred": "other",
+            "confidence": 0.3,
+            "cues": []
+          },
+          {
+            "case_id": "HT29",
+            "text": "退货邮费谁出？",
+            "gold": "other",
+            "pred": "refund",
+            "confidence": 0.6,
+            "cues": [
+              "退货"
+            ]
+          }
+        ],
+        "total": 30
+      },
+      "note": "留出集只用于最终测量，不参与调参；跑完这一遍就冻结"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{"case_id": "HT01", "text": "预售等太久了，我退掉，货没发。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "未发货退款"}
+{"case_id": "HT02", "text": "下错单了，麻烦把钱退回来，仓库还没发。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "未发货退款"}
+{"case_id": "HT03", "text": "赠品缺了两个，折 30 块退我。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "赠品缺件补退"}
+{"case_id": "HT04", "text": "结算时多算运费，退我 12 块。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "运费差额"}
+{"case_id": "HT05", "text": "我重复付了一次款，退一笔。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "重复付款"}
+{"case_id": "HT06", "text": "还没发货，帮我取消并退款。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "取消订单"}
+{"case_id": "HT07", "text": "尺码选错了，退款吧，东西没寄。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "买错规格"}
+{"case_id": "HT08", "text": "商品写着第二件半价，结果没减，退差价。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "活动价差"}
+{"case_id": "HT09", "text": "收到的杯盖裂了，退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "破损退货"}
+{"case_id": "HT10", "text": "衣服有异味，洗了还是这样，退货。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "质量问题退货"}
+{"case_id": "HT11", "text": "用了三天就黑屏，退款，机子我寄回。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "寄回退款"}
+{"case_id": "HT12", "text": "收到的鞋码大一码，退回去换。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "尺码换货"}
+{"case_id": "HT13", "text": "收到货和照片差距太大，退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "描述不符"}
+{"case_id": "HT14", "text": "耳机只有一个响，我要退货。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "质量问题"}
+{"case_id": "HT15", "text": "麻烦把地址改到公司，其他不变。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "HT16", "text": "收件人电话错了，改 13700003333。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改电话"}
+{"case_id": "HT17", "text": "我地址填错楼栋了，改 5 栋。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改楼栋"}
+{"case_id": "HT18", "text": "订单寄到我旧家了，能改地址吗？", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址问句"}
+{"case_id": "HT19", "text": "收货人姓名写错了，麻烦更正。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改姓名"}
+{"case_id": "HT20", "text": "两天了还没发，催一下。", "intent": "shipping_urge", "aftersales_type": null, "hard": true, "note": "催发货（未出现发货二字）"}
+{"case_id": "HT21", "text": "物流一直停在杭州，查查怎么回事。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "物流停滞"}
+{"case_id": "HT22", "text": "我这个件到哪了？", "intent": "shipping_urge", "aftersales_type": null, "hard": true, "note": "查物流"}
+{"case_id": "HT23", "text": "明天能到吗？", "intent": "shipping_urge", "aftersales_type": null, "hard": true, "note": "时效询问"}
+{"case_id": "HT24", "text": "发货了吗？给个单号。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "查发货"}
+{"case_id": "HT25", "text": "发票可以开纸质吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "发票咨询"}
+{"case_id": "HT26", "text": "保修卡丢了还能保吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "保修咨询"}
+{"case_id": "HT27", "text": "这张券怎么用？", "intent": "other", "aftersales_type": null, "hard": false, "note": "优惠券咨询"}
+{"case_id": "HT28", "text": "能便宜点吗？", "intent": "other", "aftersales_type": null, "hard": true, "note": "议价"}
+{"case_id": "HT29", "text": "退货邮费谁出？", "intent": "other", "aftersales_type": null, "hard": true, "note": "运费咨询"}
+{"case_id": "HT30", "text": "麻烦转人工。", "intent": "other", "aftersales_type": null, "hard": false, "note": "转人工"}
