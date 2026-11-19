@@ -264,6 +264,35 @@ def test_internal_identity_nonce_is_global_across_paths(settings):
         verify_identity(header, "/internal/tools/getLogistics", settings.hmac_secret)
 
 
+class BoomAgent:
+    def answer(self, request, *, user_id=None):
+        raise RuntimeError("boom")
+
+
+def test_unhandled_agent_error_returns_contract_body(settings, auth):
+    from fastapi.testclient import TestClient
+
+    app = create_app(service=BoomAgent(), settings=settings)
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.post(
+            "/internal/agent/ask",
+            json=payload("订单 O1001 还能退吗", order_no="O1001"),
+            headers=auth(),
+        )
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body["code"] == "AGENT_UNAVAILABLE"
+    assert body["retryable"] is True
+    assert body["traceId"] == "trace-test"
+
+
+def test_context_order_no_has_max_length(client, auth):
+    response = post(client, auth, payload("查一下订单", order_no="O" * 33))
+    assert response.status_code == 422
+    assert response.json()["code"] == "INVALID_ARGS"
+
+
 def test_contract_shape_matches_java_slots(client, auth):
     response = post(client, auth, payload("我要退款", order_no="O1001"))
     body = response.json()

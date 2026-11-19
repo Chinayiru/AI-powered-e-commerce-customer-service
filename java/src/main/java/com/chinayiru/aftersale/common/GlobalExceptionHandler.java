@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -41,6 +42,7 @@ public class GlobalExceptionHandler {
         if (message.isBlank()) {
             message = "请求参数不合法";
         }
+        log.warn("request validation failed traceId={} message={}", TraceFilter.currentTraceId(), message);
         return invalid(message);
     }
 
@@ -58,6 +60,12 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
         return invalid("请求参数不合法");
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex) {
+        // 契约没有 415；按“请求参数不合法”返回 422，而不是落进兜底的 500。
+        return invalid("Content-Type 不受支持，请使用 application/json");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

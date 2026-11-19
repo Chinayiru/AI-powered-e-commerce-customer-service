@@ -28,11 +28,11 @@
 ├── java/                     Spring Boot 业务后端
 │   ├── src/main/java/...     身份、状态机、幂等、政策、生成、确认执行、审计
 │   ├── src/main/resources/   application*.yml、H2/MySQL DDL
-│   ├── src/test/java/...     集成与回归测试（26 用例）
+│   ├── src/test/java/...     集成与回归测试（50 用例）
 │   └── README.md             启动、接口冒烟、实现取舍、测试映射
 ├── python/                   FastAPI 只读 AI 层
 │   ├── app/                  契约、意图/槽位、检索、工具客户端、草稿
-│   ├── tests/                pytest（21 用例）
+│   ├── tests/                pytest（28 用例）
 │   └── README.md             启动、环境变量、与 Java 联调、规则说明
 └── README.md
 ```
@@ -73,7 +73,7 @@ $env:JAVA_HOME="$env:USERPROFILE\.jdks\corretto-17.0.9"
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 cd java
-mvn -B test                 # 39 个 H2 集成与安全回归测试
+mvn -B test                 # 50 个 H2 集成与安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -81,7 +81,7 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # 另开终端：Python AI 层
 cd python
 pip install -r requirements.txt
-python -m pytest -q         # 26 个 pytest
+python -m pytest -q         # 28 个 pytest
 $env:AFTERSALE_HMAC_SECRET="dev-only-hmac-secret-change-me-please"  # 仅本机 dev
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
@@ -114,8 +114,8 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 
 | 指标 | 状态 |
 | --- | --- |
-| Java M-S 集成测试 | 39/39 通过（H2），含启动密钥红线、内部身份越权/重放、执行失败重试与咨询转售后回归；未做线程级并发压测 |
-| Python AI 单元测试 | 26/26 通过（规则式桩，FakeTools），含身份 userId 一致性、角色边界与缺失密钥启动失败；未接真实 LLM |
+| Java M-S 集成测试 | 50/50 通过（H2），含启动密钥红线、内部身份越权/重放、执行失败重试、咨询转售后回归、退款草稿缺金额拒发、签收时间缺失/金额缺失政策拦截与生成异常兜底；未做线程级并发压测 |
+| Python AI 单元测试 | 28/28 通过（规则式桩，FakeTools），含身份 userId 一致性、角色边界、缺失密钥启动失败、内部异常契约体与订单号长度上限；未接真实 LLM |
 | 意图准确率 / 槽位 F1 / 引用精确率 | 2026-11-17 holdout：意图准确率 75%（门槛 85%，未达标）、订单号召回 100%；草稿可用率待双评 |
 | 端到端闭环 | Java + Python HTTP 模式已通：咨询 → 转售后 → 草稿 → 坐席确认 → `CLOSED` |
 | MySQL 真机 | 已在本机 MySQL 8.0.30 验证生成列、唯一索引与 `ON DUPLICATE KEY UPDATE`；未做多实例并发压测 |

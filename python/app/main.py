@@ -131,6 +131,25 @@ def create_app(service: AgentService | None = None, settings: Settings | None = 
             },
         )
 
+    @app.exception_handler(Exception)
+    async def unhandled(request: Request, exc: Exception) -> JSONResponse:
+        # 兜底不能把 FastAPI 默认的 500 纯文本/堆栈直接暴露给控制面：
+        # 统一返回 Java 契约里的错误体，让 Java 能按 AGENT_UNAVAILABLE 降级。
+        logger.exception(
+            "unhandled agent error trace_id=%s path=%s",
+            request.headers.get("X-Trace-Id", ""),
+            request.url.path,
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "code": "AGENT_UNAVAILABLE",
+                "message": "Agent 内部错误，请稍后重试转人工",
+                "traceId": request.headers.get("X-Trace-Id", ""),
+                "retryable": True,
+            },
+        )
+
     return app
 
 

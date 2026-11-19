@@ -19,6 +19,7 @@ import com.chinayiru.aftersale.domain.AuditLog;
 import com.chinayiru.aftersale.domain.Draft;
 import com.chinayiru.aftersale.domain.ExecutionState;
 import com.chinayiru.aftersale.domain.ExecutionTask;
+import com.chinayiru.aftersale.domain.IntentType;
 import com.chinayiru.aftersale.domain.MessageRole;
 import com.chinayiru.aftersale.domain.Ticket;
 import com.chinayiru.aftersale.domain.TicketMessage;
@@ -123,6 +124,10 @@ public class AgentService {
         }
         SuggestedAction action = json.read(draft.getSuggestedActionJson(), SuggestedAction.class);
         Long amount = action == null ? null : action.amountCents();
+        // 退款草稿不能“没有金额也能确认”：空金额既无法校验硬上限，也会生成一笔金额不明的执行。
+        if (draft.getIntent() == IntentType.REFUND_REQUEST && amount == null) {
+            throw new ApiException(ErrorCode.POLICY_REJECTED, "退款草稿缺少金额，请重新生成或转人工");
+        }
         if (amount != null) {
             if (policy.maxRefundableCents() == null || amount > policy.maxRefundableCents()) {
                 throw new ApiException(ErrorCode.POLICY_REJECTED, "建议金额超过可退上限");

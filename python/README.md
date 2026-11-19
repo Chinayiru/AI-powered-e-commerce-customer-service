@@ -131,10 +131,12 @@ base64url(JSON{"userId","role","exp","nonce"}) + "." + base64url(HMAC_SHA256(pay
 - 工具超时或 503/504：重试 1 次，仍失败 → `HANDOFF(TOOL_FAILED)` + `degraded=true`。
 - 响应 `replyDraft` 不超过 200 字，不含“赔付 / 保证 / 已退款”等禁用表述。
 - 无命中模糊文本 → `OTHER` + `confidence=0.42` + `needHumanReview=true`，有效订单仍给安全草稿。
+- ask 未捕获异常统一返回 500 契约体 `AGENT_UNAVAILABLE`（带 `traceId`、`retryable=true`），Java 侧按 Agent 不可用兜底转人工；不会把框架默认 500 页面暴露给调用方。
+- `context.orderNo` 最长 32 字符，超长直接 422，避免异常单号进入知识检索或草稿。
 
 ## 测试
 
-`tests/test_agent.py` 覆盖 26 个场景：鉴权、签名/nonce 重放、跨端点重放、body `userId` 与签名身份不一致 403、Python 角色越权 403、缺失/过短密钥启动失败、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
+`tests/test_agent.py` 覆盖 28 个场景：鉴权、签名/nonce 重放、跨端点重放、body `userId` 与签名身份不一致 403、Python 角色越权 403、缺失/过短密钥启动失败、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全、内部异常契约体、订单号长度上限与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
 
 ## 目录
 

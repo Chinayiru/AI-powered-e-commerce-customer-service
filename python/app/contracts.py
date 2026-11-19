@@ -63,7 +63,7 @@ class History(StrictModel):
 
 
 class Context(StrictModel):
-    orderNo: str | None = None
+    orderNo: str | None = Field(default=None, max_length=32)
     summary: str | None = Field(default=None, max_length=300)
     history: list[History] = Field(default_factory=list, max_length=12)
 

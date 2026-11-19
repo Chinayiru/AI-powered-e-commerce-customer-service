@@ -23,7 +23,15 @@ public class PolicyService {
         this.properties = properties;
     }
 
+    /**
+     * 默认要求退款金额存在，供“建议退款”路径使用；
+     * 仅做资格咨询（不产生退款动作）时传 {@code amountRequired=false}。
+     */
     public PolicyDecision evaluate(Order order, Long requestedAmountCents) {
+        return evaluate(order, requestedAmountCents, true);
+    }
+
+    public PolicyDecision evaluate(Order order, Long requestedAmountCents, boolean amountRequired) {
         String version = properties.getPolicy().getVersion();
         if (order == null) {
             return PolicyDecision.denied("ORDER_NOT_FOUND", version, "3.1", "未查询到订单，无法判断退款资格。");
@@ -39,6 +47,11 @@ public class PolicyService {
             return PolicyDecision.denied("NOT_REFUNDABLE", version, "3.3",
                     "该订单当前可退金额为 0，需人工核实。");
         }
+        // 空金额不能直接跳过金额校验：建议退款却拿不到金额时只能转人工，不能生成可发送草稿。
+        if (amountRequired && requestedAmountCents == null) {
+            return PolicyDecision.denied("AMOUNT_MISSING", version, "3.1",
+                    "退款建议缺少金额，需人工核实。");
+        }
         if (requestedAmountCents != null && requestedAmountCents == 0) {
             return PolicyDecision.denied("ZERO_AMOUNT", version, "3.1", "退款金额不能为 0。");
         }
@@ -51,7 +64,11 @@ public class PolicyService {
                     "当前仅支持整单退款建议，部分退款需转人工。");
         }
         if (OrderToolService.DELIVERED.equals(order.status())) {
-            long days = PolicyDecision.daysSinceDelivery(order.deliveredAt());
+            Long days = PolicyDecision.daysSinceDelivery(order.deliveredAt());
+            if (days == null) {
+                return PolicyDecision.denied("ORDER_TIME_UNKNOWN", version, "3.2",
+                        "订单缺少签收时间，无法判断七天无理由窗口，需人工核实。");
+            }
             if (days > 7) {
                 return PolicyDecision.denied("OUTSIDE_RETURN_WINDOW", version, "3.2",
                         "已超出七天无理由窗口，需人工按政策核实。");

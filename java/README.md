@@ -18,7 +18,7 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 ```powershell
 cd H:\电商工单ai\java
-mvn -B test                 # 39 个 H2 集成与安全回归测试
+mvn -B test                 # 50 个 H2 集成与安全回归测试
 mvn -DskipTests package
 java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar
 # http://localhost:8080 ，Swagger: /swagger-ui.html
@@ -121,7 +121,7 @@ java/
 
 ### 确认发送
 
-`send` 守卫顺序：状态 → `expectedVersion` → 草稿版本 → `policyCheck.allowed` → 金额上限 → 复核说明（≥5 字）→ 正文不含内部码。
+`send` 守卫顺序：状态 → `expectedVersion` → 草稿版本 → 草稿意图/金额完整性 → `policyCheck.allowed` → 金额上限 → 复核说明（≥5 字）→ 正文不含内部码。
 
 - 事务 1：`DRAFT_READY/TRANSFERRED → CONFIRMED`，写坐席消息、待执行任务、审计；
 - 事务外：模拟执行；
@@ -143,12 +143,14 @@ java/
 - 硬限为 `policyCheck.maxRefundableCents`；部分退款、已退过款、非整单请求直接 `TRANSFERRED(POLICY_BLOCKED)`，不给金额。
 - 已签收超窗口仍可生成草稿（`allowed=false`），但 `send` 必须 409 `POLICY_REJECTED`。
 - 金额 > `app.refund.auto-suggest-limit-cents=5000` 时必须写 `reviewNote`。
+- 退款请求缺失建议金额时政策返回 `AMOUNT_MISSING`，草稿仍可生成但不允许发送；`DELIVERED` 缺失 `deliveredAt` 时返回 `ORDER_TIME_UNKNOWN`，不能再按“第 0 天”放行。
+- 草稿发布前先抢占状态；若工单已被撤销/改派，迟到结果只记 `LATE_RESULT_DROPPED`，不再写入活跃草稿。生成阶段任何未预期异常都会兜底转 `TRANSFERRED(TOOL_FAILED)` 并写审计。
 
 ### 契约取舍（已在代码注释/本文件记录）
 
 1. **工单号**：数据字典与示例使用 `T + yyyyMMdd + 6 位序号`（如 `T202611110001`）；边界书 §4.3 的“4 位”与之冲突，本实现采用 6 位。
 2. 为持“迟到响应”和 202 承诺，增加实现字段/表：`aftersale_ticket.generation_task_id`、`execution_task`、`audit_log`、`ticket_sequence`。这些不改变对外响应字段。
-3. 内部 nonce 去重按“身份 + 路径”隔离，避免 Python 一次请求内多次工具调用被误杀；契约只要求 nonce 5 分钟内唯一，这里是更窄的实现。
+3. 内部 nonce 去重按“身份”隔离，不绑定请求路径，因此同一身份跨端点重放会被拒绝；Python 每次工具调用重新签发身份，所以一次 ask 内查订单+物流不受影响。
 4. `app.agent.mode=scripted` 是验收桩；`http` 模式会严格解析 Python `/internal/agent/ask` 响应，未知字段直接失败。
 
 ## 5. 测试
@@ -157,7 +159,7 @@ java/
 mvn -B test
 ```
 
-`ApiIntegrationTest` 当前 **22/22 通过**，`StartupGuardTest` **10/10 通过**，合计 **39/39**。覆盖：
+`ApiIntegrationTest` **25/25**、`StartupGuardTest` **10/10**、`PolicyServiceTest` **7/7**、`GenerationFailureTest` **1/1**、`ConsultConversionTest` **2/2**、`SendExecutionRetryTest` **5/5**，合计 **50/50**。覆盖：
 
 - 消费者响应白名单（无 `state/intent/confidence` 等）；
 - 同 `requestId` 重放、异体冲突；
@@ -173,7 +175,10 @@ mvn -B test
 - 内部工具身份、nonce 重放、跨端点重放、agent 角色越权 403、越权 404；
 - 空坐席令牌 401；
 - 启动红线：非 dev/test 的示例串/短密钥/自报身份/共用密钥均拒绝，`dev,prod` 混合 profile 不得绕过，prod 必须 SSO + http；
-- `handoff → reply → close` 与 `send` 幂等后消费者看到 `CLOSED`。
+- `handoff → reply → close` 与 `send` 幂等后消费者看到 `CLOSED`；
+- 退款草稿缺金额时 `send` 409 `POLICY_REJECTED` 且不进入执行；五个写接口缺 `expectedVersion` → 422 `INVALID_ARGS`，不支持的 `Content-Type` → 422 而非 500；
+- `DELIVERED` 缺 `deliveredAt` → `ORDER_TIME_UNKNOWN`，退款请求缺金额 → `AMOUNT_MISSING`，资格咨询仍允许无金额；
+- 生成阶段未预期异常 → `TRANSFERRED(TOOL_FAILED)`，审计 detail 保留异常类型；发布前状态已被抢走时不写草稿。
 
 未覆盖/未验证：真实并发竞争（AC03/AC12/AC15 的线程级竞争）、执行失败 202 分支（模拟执行恒成功）、Python 真实模型效果（M-Q）。
 

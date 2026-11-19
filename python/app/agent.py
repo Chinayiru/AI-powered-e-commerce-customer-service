@@ -264,7 +264,7 @@ class AgentService:
             confidence=0.90,
             replyType=ReplyType.INFORMATIONAL,
             needHumanReview=False,
-            replyDraft=f"没查到订单 {order_no}，请核对订单号后重新提供。",
+            replyDraft=self._clip(f"没查到订单 {order_no}，请核对订单号后重新提供。"),
             citations=[],
             model=self._model(),
         )

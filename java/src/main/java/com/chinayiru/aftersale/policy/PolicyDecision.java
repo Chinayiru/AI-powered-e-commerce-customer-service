@@ -28,9 +28,13 @@ public record PolicyDecision(
         return new PolicyDecision(false, code, policyVersion, clauseId, null, true, explanation);
     }
 
-    public static long daysSinceDelivery(OffsetDateTime deliveredAt) {
+    /**
+     * 返回签收至今天数；缺少签收时间时返回 {@code null}，由调用方按“时间未知”拒绝，
+     * 不能把未知当成第 0 天，否则会绕过七天无理由窗口。
+     */
+    public static Long daysSinceDelivery(OffsetDateTime deliveredAt) {
         if (deliveredAt == null) {
-            return 0;
+            return null;
         }
         LocalDate delivered = deliveredAt.atZoneSameInstant(ZONE).toLocalDate();
         return Math.max(0, ChronoUnit.DAYS.between(delivered, LocalDate.now(ZONE)));
