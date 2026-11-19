@@ -138,6 +138,16 @@ base64url(JSON{"userId","role","exp","nonce"}) + "." + base64url(HMAC_SHA256(pay
 
 `tests/test_agent.py` 覆盖 28 个场景：鉴权、签名/nonce 重放、跨端点重放、body `userId` 与签名身份不一致 403、Python 角色越权 403、缺失/过短密钥启动失败、严格字段、意图、槽位、金额、复核、低置信、安全闸、转人工、多订单、工具失败、政策引用、物流、响应安全、内部异常契约体、订单号长度上限与契约形状。测试使用 `FakeTools`，不依赖 Java 进程。
 
+`tests/test_intent_dev.py` 另覆盖独立开发集的 60 条分类与 Agent 动作语义、3 条 QC02 门禁边界/计数校验；总计 91 项。开发集先于本轮规则修改创建并保持不变，支持疑问、否定、条件式、多意图、安全闸与多订单场景。调规则时只运行开发集和回归，不读取 holdout 错例继续调参。
+
+```powershell
+# 位于 python/；只读取 dev_v1.jsonl，不读取 holdout
+python eval/run_intent_dev.py
+python -m pytest -q
+```
+
+`intent-v1.1.0` 在 2026-11-19 的原 holdout 上为 87.5%（35/40），85% 门禁保持不变。存在 5 条误判及 3 条相对旧结果的退化；详见 [修复记录](../docs/QC02修复记录_2026-11-19.md)。开发集成绩不作为验收成绩。Java 的 `scripted` 桩规则未同步；本改动用于 Python AI 层与 Java `agent.mode=http` 链路。
+
 ## 目录
 
 ```text

@@ -56,16 +56,6 @@ class AgentService:
         history = request.context.history if request.context else []
         slots = extract_slots(request.message, context_order, [item.text for item in history])
 
-        # 多个订单号时不猜测用户指哪一个，直接交给人工确认，避免答错订单。
-        if slots.ambiguous:
-            return self._handoff(
-                Intent.HANDOFF,
-                0.95,
-                TransferReason.AMBIGUOUS_ORDER,
-                "检测到多个订单号，请只提供一个订单号，或由人工协助确认。",
-                Slots(orderNo=None, missing=[]),
-            )
-
         order_no = slots.order_no
         missing = [] if order_no else ["orderNo"]
 
@@ -78,6 +68,16 @@ class AgentService:
                 result.transfer_reason or TransferReason.OUT_OF_SCOPE,
                 self._handoff_reply(result.transfer_reason),
                 Slots(orderNo=order_no, missing=[]),
+            )
+
+        # 安全闸/明确人工请求优先，不能被多个订单号改写转人工原因。
+        if slots.ambiguous:
+            return self._handoff(
+                Intent.HANDOFF,
+                0.95,
+                TransferReason.AMBIGUOUS_ORDER,
+                "检测到多个订单号，请只提供一个订单号，或由人工协助确认。",
+                Slots(orderNo=None, missing=[]),
             )
 
         # 政策咨询不依赖订单，但必须有可引用条款；检索不到就转人工，不凭记忆回答。
