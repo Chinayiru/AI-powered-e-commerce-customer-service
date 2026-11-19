@@ -14,3 +14,15 @@ python/.venv/
 **/.pytest_cache/
 python/pytest-results.xml
 python/intent-dev-report.json
+
+# Machine-local credentials and deployment addresses
+.env
+.env.*
+!.env.example
+*.local.yml
+*.local.yaml
+*.local.properties
+*.pem
+*.key
+*.p12
+*.pfx

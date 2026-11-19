@@ -16,6 +16,7 @@ import org.springframework.web.client.RestClientException;
 
 import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -32,6 +33,7 @@ public class HttpAgentClient implements AgentClient {
 
     public HttpAgentClient(AppProperties properties, ObjectMapper objectMapper) {
         this.properties = properties;
+        validateBaseUrl(properties.getAgent().getBaseUrl());
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(2000);
         factory.setReadTimeout(properties.getAgent().getTimeoutMs());
@@ -74,13 +76,13 @@ public class HttpAgentClient implements AgentClient {
         } catch (ResourceAccessException e) {
             long elapsed = (System.nanoTime() - start) / 1_000_000;
             if (isTimeout(e)) {
-                log.warn("agent timeout after {}ms: {}", elapsed, e.getMessage());
+                log.warn("agent timeout after {}ms", elapsed);
                 throw new AgentUnavailableException(ErrorCode.TOOL_TIMEOUT, "AI 服务超时", e);
             }
-            log.warn("agent unavailable after {}ms: {}", elapsed, e.getMessage());
+            log.warn("agent unavailable after {}ms", elapsed);
             throw new AgentUnavailableException(ErrorCode.AGENT_UNAVAILABLE, "AI 服务不可达", e);
         } catch (RestClientException e) {
-            log.warn("agent call failed: {}", e.getMessage());
+            log.warn("agent call failed ({})", e.getClass().getSimpleName());
             throw new AgentUnavailableException(ErrorCode.AGENT_UNAVAILABLE, "AI 调用失败", e);
         }
 
@@ -106,5 +108,20 @@ public class HttpAgentClient implements AgentClient {
             current = current.getCause();
         }
         return false;
+    }
+
+    private static void validateBaseUrl(String value) {
+        try {
+            URI uri = URI.create(value == null ? "" : value);
+            if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                    || uri.getHost() == null || uri.getUserInfo() != null
+                    || uri.getRawQuery() != null || uri.getRawFragment() != null
+                    || uri.getHost().endsWith(".invalid")) {
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalArgumentException ex) {
+            // Never echo the supplied URL: it may contain a credential.
+            throw new IllegalStateException("APP_AGENT_BASE_URL 必须是有效 HTTP(S) 地址，且不含凭证、查询串或片段");
+        }
     }
 }

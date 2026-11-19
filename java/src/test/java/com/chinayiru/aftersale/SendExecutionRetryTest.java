@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @ActiveProfiles("test")
 class SendExecutionRetryTest {
 
-    private static final String AGENT_TOKEN = "demo-agent-token";
+    private static final String AGENT_TOKEN = "test-only-agent-fixture-0123456789abcdef";
 
     @Autowired
     private MockMvc mockMvc;

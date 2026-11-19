@@ -64,7 +64,7 @@ class GenerationFailureTest {
         String ticketId = json(created).path("ticketId").asText();
 
         JsonNode view = json(mockMvc.perform(get("/api/agent/tickets/{id}", ticketId)
-                .header("X-Agent-Token", "demo-agent-token")).andReturn());
+                .header("X-Agent-Token", "test-only-agent-fixture-0123456789abcdef")).andReturn());
         assertThat(view.path("ticket").path("state").asText()).isEqualTo("TRANSFERRED");
         assertThat(view.path("ticket").path("transferReason").asText()).isEqualTo("TOOL_FAILED");
         String detail = jdbc.queryForObject(

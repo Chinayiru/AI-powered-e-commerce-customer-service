@@ -1,6 +1,6 @@
 # Hvue · 售后助手前端
 
-Vue 3 + Vite 6 + Vue Router 4 的演示前端，对接仓库根目录下的 Java 后端（默认 `http://127.0.0.1:8080`）。
+Vue 3 + Vite 6 + Vue Router 4 的演示前端，对接 Java 后端。开发代理地址由 `JAVA_PROXY_TARGET` 提供；运行前在仓库根目录执行 `. ./scripts/dev-env.ps1`，详见 [配置说明](../docs/CONFIGURATION.md)。
 
 ## 启动
 
@@ -21,7 +21,7 @@ pnpm install
 pnpm dev
 ```
 
-打开 `http://localhost:5173`。Vite 会把 `/api` 代理到 `http://127.0.0.1:8080`，无需处理跨域。
+打开 `http://localhost:5173`。Vite 按 `JAVA_PROXY_TARGET` 把 `/api` 代理到 Java；未设置时不建立开发代理。
 
 > 本环境 `pnpm` 默认阻止依赖构建脚本。仓库已通过 `pnpm-workspace.yaml` 放行 `esbuild`；
 > 若仍提示 `ERR_PNPM_IGNORED_BUILDS`，执行一次 `pnpm approve-builds --all`。
@@ -43,7 +43,7 @@ pnpm dev
   `Authorization: Bearer <ticketToken>`。
 - `ticketToken` 只保存在当前浏览器的 `localStorage`，用于“最近工单”恢复；
   它不是长期登录态，也不会出现在页面文案里。
-- 坐席接口只认 `X-Agent-Token`，默认演示值 `demo-agent-token`，可在检索页修改。
+- 坐席接口只认 `X-Agent-Token`，不提供默认值；在密码框中输入管理员提供的值，仅在标签页 sessionStorage 保存，旧 localStorage 值会清除。
 
 ## 演示路径
 

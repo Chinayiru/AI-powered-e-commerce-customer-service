@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-20",
+  "scope": "Credential literals and local service URLs redacted. Counts and historical source fingerprints are unchanged. Files are sanitized derivatives, not byte-identical original evidence.",
+  "files": [
+    {
+      "file": "测试复跑证据_2026-11-17_111501/logs/e2e-run.json",
+      "original_sha256": "d0c83093476a2caabcea0f62e75bafa8f288cb8fdbd48ea582d4ecd90cfd530b",
+      "redacted_sha256": "a581e7637b5af4827e80e08ebdc7fd22a4f2b5aa27d24bbadc92b7fb5242cb32"
+    },
+    {
+      "file": "测试复跑证据_2026-11-17_111501/logs/python-service.log",
+      "original_sha256": "bfdb84ae9418c6853c8b00a118a6db48c45a4e8ce615a6f0f9d2c1c0db444ef1",
+      "redacted_sha256": "18a04ea18966178341276aefd5deed60acfb7579400fa2f2b96d03f77b1a0de2"
+    }
+  ]
+}
