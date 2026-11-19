@@ -1,0 +1,50 @@
+{
+  "fixture_version": "2026-11-09.1",
+  "order": {
+    "cases": [
+      {
+        "aftersales_id": "AS2003",
+        "amount": "30.00",
+        "events": [
+          {
+            "actor": "platform",
+            "at": "2026-11-07 10:00:00",
+            "key": "apply",
+            "to": "INITIATED"
+          },
+          {
+            "actor": "platform",
+            "at": "2026-11-07 10:00:00",
+            "key": "apply",
+            "to": "INITIATED"
+          }
+        ],
+        "status": "INITIATED",
+        "type": "refund_only"
+      }
+    ],
+    "create_time": "2026-11-02 09:00:00",
+    "logistics": [
+      {
+        "company": "中通",
+        "package_id": "PKG1",
+        "receive_time": "2026-11-06 18:00:00",
+        "ship_time": "2026-11-03 10:00:00",
+        "tracking_no": "ZT900"
+      }
+    ],
+    "order_id": "DY2003",
+    "order_status": "3",
+    "pay_amount": "30.00",
+    "product_items": [
+      {
+        "category": "general",
+        "num": 1,
+        "price": "30.00",
+        "sku_id": "SKU-J",
+        "title": "数据线"
+      }
+    ]
+  },
+  "platform": "douyin"
+}

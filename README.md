@@ -136,3 +136,19 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 5. `docs/TEST_PLAN.md` + `docs/DEMO.md` —— 怎么证明、怎么讲
 6. `java/README.md` —— Java 实现、启动方式、取舍与测试映射
 7. `python/README.md` —— Python 规则、启动方式、与 Java 联调
+---
+
+## 并入的 W1 垂直切片（`app/` + `web/` + `src/`）
+
+本分支同时收录了另一条线的工作：一条用 Python 重写的垂直切片，以及配套的 React 控制台和 Java 托管壳。
+
+| 路径 | 内容 | 启动 |
+| --- | --- | --- |
+| `app/` | 读单 → 提案 → 策略 → 闸门 → 落单的可审计流水线，`pytest` 全离线 | `python -m app.cli run --fixture tb_1001` |
+| `app/api/server.py` | 唯一业务实现之上的 HTTP 薄封装（含 `X-Operator-*` 鉴权、`client_token` 幂等） | `python -m app.api.server`（127.0.0.1:8000） |
+| `web/` | Vite 5 + React 18 + TypeScript 控制台：工单处理 / 运行记录 / 评测与基线 | `cd web; npm install; npm run dev`（5173）或 `npm run build` 后由 8000 托管 |
+| `src/` + `pom.xml` | Spring Boot 2.7（JDK 8）壳：托管 `web/dist`，把 `/api/**` 反代到 Python，不复制任何业务规则 | `mvn -DskipTests package; java -jar target/aftersale-console-0.1.0.jar`（8080） |
+
+该切片的边界与验收口径在 `docs/CONTRACT.md`、`docs/ACCEPTANCE.md`；上面 `java/`、`python/` 两套是原仓库既有实现，互不依赖。
+
+关掉 GitHub 阻断（hosts 把 `github.com` 映射到 127.0.0.1）后再 `git push`；本切片单独快照在分支 `w1-vertical-slice`。

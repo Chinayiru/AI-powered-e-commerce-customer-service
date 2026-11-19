@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Java 侧只做两件事：托管 web/dist 静态页、把 /api/** 反代到 Python 服务。
+    业务规则一律留在 Python（CONTRACT NG-6 / ADR-011），这里不复制任何判断。
+
+    本机 JDK 是 1.8.0_251，所以只能用 Spring Boot 2.7.x；Boot 3 要求 Java 17。
+  -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.18</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.chinayiru</groupId>
+  <artifactId>aftersale-console</artifactId>
+  <version>0.1.0</version>
+  <name>aftersale-console</name>
+  <description>售后工单处置台：静态前端托管 + /api 反向代理</description>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!--
+      反代必须用 Apache HttpClient，不能用默认的 HttpURLConnection：
+      上游返回 401/403 时 HttpURLConnection 会尝试带认证重发，而请求体已经流出去了，
+      于是抛 HttpRetryException（"cannot retry due to server authentication, in streaming mode"），
+      前端看到的是 502「Python API 不可达」——把"没登录"误报成"服务挂了"。
+    -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <!-- web/dist 由 `cd web && npm run build` 产出；存在时原样打进 classpath:/static/ -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>web/dist</directory>
+        <targetPath>static</targetPath>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

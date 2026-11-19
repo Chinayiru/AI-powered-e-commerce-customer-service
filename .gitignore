@@ -1,4 +1,16 @@
+# W1 切片（app/、web/、src/）
+__pycache__/
+*.pyc
+*.py[cod]
+.pytest_cache/
+.review_backup_20261104/
+reports/runs.jsonl
+web/node_modules/
+web/dist/
+.env
+
+# 原仓库（python/、java/）
 python/**/__pycache__/
 python/.pytest_cache/
 python/.venv/
-*.py[cod]
+target/

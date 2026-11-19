@@ -1,0 +1,95 @@
+{"case_id": "ID001", "text": "还没发货，我不想要了，麻烦退款。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "未发货仅退款"}
+{"case_id": "ID002", "text": "拍错了，麻烦帮我退一下款，订单还没发。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "未发货仅退款"}
+{"case_id": "ID003", "text": "这单不要了，直接原路退回吧，别发货了。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "取消订单"}
+{"case_id": "ID004", "text": "我看了下不想要了，申请仅退款，东西不用寄回。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "明确仅退款"}
+{"case_id": "ID005", "text": "优惠券没用上，价格不对，退我差价 20 元。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "差价退款"}
+{"case_id": "ID006", "text": "少发了一件，退我一件的钱就行。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "少发补退"}
+{"case_id": "ID007", "text": "收到的是空盒子，申请仅退款。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "空包仅退款"}
+{"case_id": "ID008", "text": "付款后一直没发货，我不要了，退钱。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "未发货退款"}
+{"case_id": "ID009", "text": "重复下单了，退掉多拍的那一单。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "重复下单"}
+{"case_id": "ID010", "text": "商品降价了，麻烦退我差价 30 元。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "价保差价"}
+{"case_id": "ID011", "text": "我只要退款，不退货，包装还没拆。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "明确不退货"}
+{"case_id": "ID012", "text": "快递显示已签收但我没收到，申请退款。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "未收到货+退款动作"}
+{"case_id": "ID013", "text": "我要退款，另外收货地址也写错了，一起改。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "多意图，退款为主诉"}
+{"case_id": "ID014", "text": "订单金额算错了，多收了我 15 块，退回来。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "多收退款"}
+{"case_id": "ID015", "text": "已付款，但我想取消订单，退款吧。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "取消订单"}
+{"case_id": "ID016", "text": "漏发了配件，退我 20 元。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "漏发补退"}
+{"case_id": "ID017", "text": "帮我取消这单，钱退到原支付账户。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "取消订单"}
+{"case_id": "ID018", "text": "东西还没出库，直接退款，不用发货了。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "未出库退款"}
+{"case_id": "ID019", "text": "我买错了规格，退一下款，货还在仓库。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "买错规格"}
+{"case_id": "ID020", "text": "商品页面写包邮，结果收了运费，退我运费 12 元。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "运费退款"}
+{"case_id": "ID021", "text": "收到货了，颜色和图片差太多，我要退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "已收货退货退款"}
+{"case_id": "ID022", "text": "衣服尺码偏小，穿不下，申请退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "尺码问题退货"}
+{"case_id": "ID023", "text": "耳机有杂音，已经拆封了，要求退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "已拆封质量问题"}
+{"case_id": "ID024", "text": "收到就是坏的，屏幕碎了，退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "破损退货"}
+{"case_id": "ID025", "text": "鞋子开胶了，质量有问题，我要退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "质量问题"}
+{"case_id": "ID026", "text": "收到货不喜欢，七天无理由退货，麻烦安排。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "无理由退货"}
+{"case_id": "ID027", "text": "东西用着过敏，退货退款，我把寄回去。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "寄回"}
+{"case_id": "ID028", "text": "发错货了，我要退回去换一个，退我钱。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "发错货，寄回"}
+{"case_id": "ID029", "text": "商品和描述不符，我要退货，退款到原卡。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "描述不符"}
+{"case_id": "ID030", "text": "快递到了，但我不想要了，退货退款吧。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "已到货不想要"}
+{"case_id": "ID031", "text": "拆开发现少件，我要求退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "少件但要求退货"}
+{"case_id": "ID032", "text": "这件大衣起球严重，退货退款，运费谁出？", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "退货为主，附带咨询"}
+{"case_id": "ID033", "text": "已经签收了，质量不行，退货退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "签收后质量问题"}
+{"case_id": "ID034", "text": "手机屏幕有划痕，我要退掉，退款。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "退掉+退款，按退货退款"}
+{"case_id": "ID035", "text": "地址填错了，改成幸福小区 3 栋 502。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID036", "text": "麻烦把收货地址改为公司：科技园 A 座 8 楼。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID037", "text": "收货人电话写错了，改成 13800001111。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改电话"}
+{"case_id": "ID038", "text": "我搬家了，订单地址换成新家。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "换地址"}
+{"case_id": "ID039", "text": "还没发货吧？先帮我把地址改一下。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "未发货改地址"}
+{"case_id": "ID040", "text": "地址写到老家了，能改到现在的住址吗？", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址问句"}
+{"case_id": "ID041", "text": "修改一下收货信息，收件人换成我同事。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改收件人"}
+{"case_id": "ID042", "text": "订单的收货地址少写了门牌号，补上 12 号。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "补地址"}
+{"case_id": "ID043", "text": "我不在家，地址改到小区代收点。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID044", "text": "换个收货地址，原来那个不用了。", "intent": "address_change", "aftersales_type": null, "hard": true, "note": "换地址+不用了（易误判退款）"}
+{"case_id": "ID045", "text": "麻烦地址改成公司前台，电话不变。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID046", "text": "地址错了，麻烦改到杭州市西湖区文三路 90 号。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID047", "text": "收货人姓名写错了，改成李雷。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改姓名"}
+{"case_id": "ID048", "text": "改下地址，别发到旧地址去了。", "intent": "address_change", "aftersales_type": null, "hard": false, "note": "改地址"}
+{"case_id": "ID049", "text": "下单三天了，什么时候发货？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催发货"}
+{"case_id": "ID050", "text": "催一下发货，急用。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催发货"}
+{"case_id": "ID051", "text": "怎么还没发货，能不能快点？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催发货"}
+{"case_id": "ID052", "text": "物流三天没更新了，帮我查一下。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "查物流"}
+{"case_id": "ID053", "text": "快递到哪了？给个单号。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "查物流"}
+{"case_id": "ID054", "text": "我的包裹一直显示揽收，是不是丢了？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "物流异常"}
+{"case_id": "ID055", "text": "麻烦问下大概几天能到北京？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "时效咨询"}
+{"case_id": "ID056", "text": "已经付款两天了，还没出库吗？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催出库"}
+{"case_id": "ID057", "text": "发货了吗？没发的话帮我加急。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "加急"}
+{"case_id": "ID058", "text": "快递停在转运中心不动了，催一下物流。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催物流"}
+{"case_id": "ID059", "text": "能不能今天发出来？明天要出差。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "催发货"}
+{"case_id": "ID060", "text": "包裹显示签收了但我没收到，查下物流。", "intent": "shipping_urge", "aftersales_type": null, "hard": true, "note": "与 ID012 对照：只要查物流"}
+{"case_id": "ID061", "text": "发货通知没收到，订单到底发了没？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "查发货状态"}
+{"case_id": "ID062", "text": "顺丰还是中通发的？大概什么时候到？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "快递公司+时效"}
+{"case_id": "ID063", "text": "发票怎么开？能开公司抬头吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询发票"}
+{"case_id": "ID064", "text": "这个支持七天无理由吗？", "intent": "other", "aftersales_type": null, "hard": true, "note": "政策咨询，非退款动作"}
+{"case_id": "ID065", "text": "保修期是多久？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询保修"}
+{"case_id": "ID066", "text": "尺码表在哪里看？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询尺码"}
+{"case_id": "ID067", "text": "我要投诉你们客服态度。", "intent": "other", "aftersales_type": null, "hard": false, "note": "投诉"}
+{"case_id": "ID068", "text": "转人工客服。", "intent": "other", "aftersales_type": null, "hard": true, "note": "要人工（非退款）"}
+{"case_id": "ID069", "text": "谢谢，问题解决了。", "intent": "other", "aftersales_type": null, "hard": false, "note": "无诉求"}
+{"case_id": "ID070", "text": "有没有优惠券可以领？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询优惠"}
+{"case_id": "ID071", "text": "这个颜色还有货吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询库存"}
+{"case_id": "ID072", "text": "价保怎么申请？", "intent": "other", "aftersales_type": null, "hard": true, "note": "流程咨询，非退款动作"}
+{"case_id": "ID073", "text": "退货的运费谁承担？", "intent": "other", "aftersales_type": null, "hard": true, "note": "退货政策咨询"}
+{"case_id": "ID074", "text": "买了三件能开一张发票吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询发票"}
+{"case_id": "ID075", "text": "你们发的是正品吗？", "intent": "other", "aftersales_type": null, "hard": false, "note": "咨询正品"}
+{"case_id": "ID076", "text": "我想问下退款一般多久到账？", "intent": "other", "aftersales_type": null, "hard": true, "note": "退款流程咨询，易误判退款"}
+{"case_id": "ID077", "text": "退款到账了吗？帮我查下状态。", "intent": "other", "aftersales_type": null, "hard": true, "note": "查进度，非新申请"}
+{"case_id": "ID078", "text": "算了，不退款了，东西我留着。", "intent": "other", "aftersales_type": null, "hard": true, "note": "否定退款"}
+{"case_id": "ID079", "text": "取消退款申请，我不退了。", "intent": "other", "aftersales_type": null, "hard": true, "note": "撤销申请"}
+{"case_id": "ID080", "text": "钱不用退了，帮我改成换货。", "intent": "other", "aftersales_type": null, "hard": true, "note": "否定退款+换货"}
+{"case_id": "ID081", "text": "发货少了一件，补我 20 元。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "补我（同义动作）"}
+{"case_id": "ID082", "text": "你们重复扣款了，退一笔到我卡上。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "退一笔"}
+{"case_id": "ID083", "text": "货还在仓库没发出，退了吧。", "intent": "refund", "aftersales_type": "refund_only", "hard": true, "note": "退了吧（口语）"}
+{"case_id": "ID084", "text": "型号发错了，我退回来换正确的那款。", "intent": "refund", "aftersales_type": "return_refund", "hard": true, "note": "退回来换（寄回语义）"}
+{"case_id": "ID085", "text": "付款三天了，什么时候能发货？", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "能发/发货"}
+{"case_id": "ID086", "text": "明天能送到吗？着急用。", "intent": "shipping_urge", "aftersales_type": null, "hard": true, "note": "送到（同义时效）"}
+{"case_id": "ID087", "text": "包裹在网点停了，帮我查查。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "网点/查查"}
+{"case_id": "ID088", "text": "上一笔退款到账没？", "intent": "other", "aftersales_type": null, "hard": true, "note": "到账没（咨询）"}
+{"case_id": "ID089", "text": "少送了一件，补我钱。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "少送+补我"}
+{"case_id": "ID090", "text": "麻烦退差额 18 元到原账户。", "intent": "refund", "aftersales_type": "refund_only", "hard": false, "note": "退差额"}
+{"case_id": "ID091", "text": "我要退货，东西没用过。", "intent": "refund", "aftersales_type": "return_refund", "hard": false, "note": "退货（未拆）"}
+{"case_id": "ID092", "text": "快递两天没动了，看看物流。", "intent": "shipping_urge", "aftersales_type": null, "hard": false, "note": "看看物流"}
+{"case_id": "ID093", "text": "取消退款吧，东西我留着了。", "intent": "other", "aftersales_type": null, "hard": true, "note": "否定退款"}
+{"case_id": "ID094", "text": "能开发票吗？公司抬头。", "intent": "other", "aftersales_type": null, "hard": false, "note": "发票咨询"}
+

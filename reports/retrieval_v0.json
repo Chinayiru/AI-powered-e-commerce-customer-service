@@ -1,0 +1,111 @@
+{
+  "dataset": "synthetic",
+  "provider": "scripted",
+  "k": 5,
+  "generated_at": "2026-11-19T03:59:56.216625+00:00",
+  "keyword": {
+    "retriever": "keyword",
+    "recall_at_5": 0.95,
+    "n_queries": 60,
+    "n_hits": 57,
+    "unlabeled": 0,
+    "misses": [
+      {
+        "query_id": "Q017",
+        "query": "P 图会被发现吗",
+        "gold": [
+          "QA-009"
+        ],
+        "top5": [
+          "QA-012",
+          "QA-031",
+          "QA-003",
+          "QA-034",
+          "QA-030"
+        ]
+      },
+      {
+        "query_id": "Q040",
+        "query": "客户说要起诉我们",
+        "gold": [
+          "QA-020"
+        ],
+        "top5": [
+          "QA-016",
+          "QA-019",
+          "QA-017",
+          "QA-008",
+          "QA-018"
+        ]
+      },
+      {
+        "query_id": "Q060",
+        "query": "商家说没货了怎么办",
+        "gold": [
+          "QA-040"
+        ],
+        "top5": [
+          "QA-023",
+          "QA-024",
+          "QA-038",
+          "QA-018",
+          "QA-033"
+        ]
+      }
+    ]
+  },
+  "hybrid": {
+    "retriever": "hybrid",
+    "recall_at_5": 0.95,
+    "n_queries": 60,
+    "n_hits": 57,
+    "unlabeled": 0,
+    "misses": [
+      {
+        "query_id": "Q017",
+        "query": "P 图会被发现吗",
+        "gold": [
+          "QA-009"
+        ],
+        "top5": [
+          "QA-012",
+          "QA-031",
+          "QA-034",
+          "QA-003",
+          "QA-037"
+        ]
+      },
+      {
+        "query_id": "Q040",
+        "query": "客户说要起诉我们",
+        "gold": [
+          "QA-020"
+        ],
+        "top5": [
+          "QA-016",
+          "QA-019",
+          "QA-008",
+          "QA-017",
+          "QA-001"
+        ]
+      },
+      {
+        "query_id": "Q060",
+        "query": "商家说没货了怎么办",
+        "gold": [
+          "QA-040"
+        ],
+        "top5": [
+          "QA-023",
+          "QA-024",
+          "QA-038",
+          "QA-021",
+          "QA-020"
+        ]
+      }
+    ]
+  },
+  "delta_pt": 0.0,
+  "vector_enabled": false,
+  "note": "hybrid 的向量通道是 ScriptedEmbedder，不产生语义收益；delta 只用于验证阈值逻辑"
+}
