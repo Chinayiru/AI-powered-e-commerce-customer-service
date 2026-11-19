@@ -12,3 +12,4 @@ python/.venv/
 **/python-deps/
 **/__pycache__/
 **/.pytest_cache/
+python/pytest-results.xml
