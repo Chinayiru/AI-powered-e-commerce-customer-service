@@ -41,7 +41,7 @@
 
 ---
 
-## 三层职责（一句话版）
+## 三层职责
 
 | 层 | 职责 | 不允许 |
 | --- | --- | --- |
@@ -112,7 +112,7 @@ java -jar target\aftersale-agent-java-0.1.0-SNAPSHOT.jar --spring.profiles.activ
 
 ---
 
-## 指标（诚实版）
+## 指标
 
 | 指标 | 状态 |
 | --- | --- |
